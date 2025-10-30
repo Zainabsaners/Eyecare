@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,12 +23,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qoef(36*i*o$n$-fxo8l#+mt3z4*=kq%+^@lv921h1xi0$@)dn'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-qoef(36*i*o$n$-fxo8l#+mt3z4*=kq%+^@lv921h1xi0$@)dn')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',
+    '.vercel.app',
+    '.netlify.app',
+    '.herokuapp.com'
+]
 
 
 # Application definition
@@ -52,6 +60,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Added for production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -99,12 +108,14 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# CORS settings
+# CORS settings - Will be updated after deployment
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5174",
+    "https://eyecare-vision-ai.vercel.app",  # Your Vercel frontend
+    "https://eyecare-frontend.onrender.com",  # If using Render for frontend
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -113,25 +124,23 @@ CORS_ALLOW_CREDENTIALS = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
-
 # Email Configuration
-#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-# For production, use:
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'triniquezainab@gmail.com'
-EMAIL_HOST_PASSWORD = 'pmui joti iyhp asto'
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'triniquezainab@gmail.com')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'pmui joti iyhp asto')
 
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
 ADMIN_EMAILS = [
     'triniquezainab@gmail.com',
     'stacykivindyo@gmail.com'
 ]
-
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -143,9 +152,15 @@ DATABASES = {
     }
 }
 
+# For production, you can use environment database URL
+if not DEBUG:
+    DATABASES['default'] = dj_database_url.config(
+        default='sqlite:///db.sqlite3',
+        conn_max_age=600
+    )
+
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -165,7 +180,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -177,28 +191,37 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Added for production
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+# Jazzmin settings
 JAZZMIN_SETTINGS = {
-    "site_title": " Achievers Admin",          # Title in browser tab
-    "site_header": "Achievers Dashboard",     # Big title at top of admin
-    "site_brand": "My Achievers Admin",      # Title on login screen
-    "welcome_sign": "Welcome to my Achievers Admin",  # Login page text
-    "copyright": "achievers © 2025", 
-    "show_ui_builder": "True" ,
+    "site_title": "Achievers Admin",
+    "site_header": "Achievers Dashboard",
+    "site_brand": "My Achievers Admin",
+    "welcome_sign": "Welcome to my Achievers Admin",
+    "copyright": "achievers © 2025",
+    "show_ui_builder": "True",
 }
-JAZZMIN_UI_TWEAKS ={
+
+JAZZMIN_UI_TWEAKS = {
     "theme": "minty",
     "dark_mode_theme": "cyborg",
-
 }
+
+# Security settings for production
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
