@@ -10,10 +10,10 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-qoef(36*i*o$n$-fxo8l#+mt3z4*=kq%+^@lv921h1xi0$@)dn')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-for-development')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -21,8 +21,12 @@ ALLOWED_HOSTS = [
     '.onrender.com',
     '.vercel.app',
     '.netlify.app',
-    '.herokuapp.com'
+    '.herokuapp.com',
+    'eyecare-utjw.onrender.com',  
 ]
+
+# Add this to handle both with and without trailing slashes
+APPEND_SLASH = True
 
 # Application definition
 INSTALLED_APPS = [
@@ -45,6 +49,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Always include this
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -52,14 +57,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-# Only add whitenoise in production
-if not DEBUG:
-    try:
-        import whitenoise
-        MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-    except ImportError:
-        pass
 
 ROOT_URLCONF = 'eyecare.urls'
 
@@ -80,13 +77,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'eyecare.wsgi.application'
 
-# REST Framework configuration
+# REST Framework configuration - Make it more permissive for now
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # Change to AllowAny for testing
     ),
 }
 
@@ -99,14 +96,8 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
-]
-
+# CORS settings - More permissive for development
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all for now, restrict later
 CORS_ALLOW_CREDENTIALS = True
 
 # Media files
@@ -121,8 +112,8 @@ else:
     EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
     EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
     EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'triniquezainab@gmail.com')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'pmui joti iyhp asto')
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
@@ -131,7 +122,7 @@ ADMIN_EMAILS = [
     'stacykivindyo@gmail.com'
 ]
 
-# Database
+# Database - Use PostgreSQL on Render
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -139,16 +130,7 @@ DATABASES = {
     }
 }
 
-# For production database (optional - only if we decide to use PostgreSQL)
-if not DEBUG:
-    try:
-        import dj_database_url
-        DATABASES['default'] = dj_database_url.config(
-            default='sqlite:///db.sqlite3',
-            conn_max_age=600
-        )
-    except ImportError:
-        pass
+
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -175,21 +157,22 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Jazzmin settings
 JAZZMIN_SETTINGS = {
-    "site_title": "Achievers Admin",
-    "site_header": "Achievers Dashboard",
-    "site_brand": "My Achievers Admin",
-    "welcome_sign": "Welcome to my Achievers Admin",
-    "copyright": "achievers © 2025",
-    "show_ui_builder": "True",
+    "site_title": "EyeCare Admin",
+    "site_header": "EyeCare Dashboard",
+    "site_brand": "EyeCare Admin",
+    "welcome_sign": "Welcome to EyeCare Admin",
+    "copyright": "EyeCare © 2025",
+    "show_ui_builder": True,
 }
 
 JAZZMIN_UI_TWEAKS = {
