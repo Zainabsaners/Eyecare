@@ -1,0 +1,1 @@
+EyeCare Vision AI is a comprehensive healthcare platform that combines artificial intelligence with expert medical care to revolutionize eye health monitoring. Our platform enables early detection of eye conditions through AI analysis and connects patients with verified eye care specialists for consultations and follow-up care.
