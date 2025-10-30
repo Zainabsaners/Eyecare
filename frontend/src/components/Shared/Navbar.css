@@ -1,0 +1,213 @@
+/* Navbar.css - Fixed Responsive Version */
+.navbar {
+  background: #4CAF50;
+  padding: 1rem 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.navbar-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navbar-loading {
+  color: white;
+}
+
+/* Desktop Navigation */
+.navbar-desktop {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.navbar-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.navbar-link:hover {
+  opacity: 0.8;
+}
+
+.navbar-register-btn {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.navbar-register-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.navbar-greeting {
+  color: white;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.navbar-logout-btn {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.navbar-logout-btn:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Mobile Menu Button */
+.navbar-mobile-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+/* Mobile Navigation */
+.navbar-mobile {
+  background: #45a049;
+  padding: 1rem;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.navbar-mobile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.navbar-mobile-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.75rem 0;
+  transition: opacity 0.3s ease;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.navbar-mobile-link:last-child {
+  border-bottom: none;
+}
+
+.navbar-mobile-link:hover {
+  opacity: 0.8;
+}
+
+.navbar-mobile-login {
+  border-top: 1px solid rgba(255,255,255,0.2);
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+}
+
+.navbar-mobile-register {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  background: rgba(255,255,255,0.2);
+  padding: 0.75rem;
+  border-radius: 6px;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.navbar-mobile-register:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.navbar-mobile-greeting {
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 0;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  margin-top: 0.5rem;
+}
+
+.navbar-mobile-logout {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.navbar-mobile-logout:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .navbar-desktop {
+    display: none;
+  }
+  
+  .navbar-mobile-btn {
+    display: block;
+  }
+  
+  .navbar-container {
+    padding: 0 1rem;
+  }
+  
+  .navbar-logo {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-container {
+    padding: 0 0.75rem;
+  }
+  
+  .navbar-logo {
+    font-size: 1rem;
+  }
+}
