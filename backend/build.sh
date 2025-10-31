@@ -32,7 +32,7 @@ if not User.objects.filter(username=superuser_username).exists():
     # Create other users
     User.objects.create_user(
         'StacyKivindyo', 
-        'stacy.kivindyo@eyecare.com', 
+        'stacykivindyo@gmail.com', 
         'stacy@123', 
         first_name='Stacy', 
         last_name='Kivindyo', 
@@ -40,7 +40,7 @@ if not User.objects.filter(username=superuser_username).exists():
     )
     User.objects.create_user(
         'ZainabSaners', 
-        'zainab.saners@example.com', 
+        'zainabsaners@gmail.com', 
         'zainab@123', 
         first_name='Zainab', 
         last_name='Saners', 
