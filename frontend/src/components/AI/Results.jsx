@@ -260,7 +260,7 @@ const Results = () => {
           
           {user?.user_type === 'user' && !scanResult.is_reviewed && (
             <button 
-              onClick={() => navigate('/consultation', { state: { scanResult }})}
+              onClick={() => navigate('/consultations', { state: { scanResult }})}
               className="btn btn-primary"
             >
               Request Specialist Consultation
