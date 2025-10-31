@@ -61,19 +61,21 @@ def create_users():
             patient.set_password(patient_data['password'])
             patient.save()
             print(f"✅ Created patient: {patient_data['first_name']} {patient_data['last_name']}")
+    
+    return superuser, specialist
 
-def create_articles():
+def create_articles(superuser, specialist):
     articles = [
         {
             'title': 'Welcome to EyeCare Vision AI Platform',
             'content': 'Our AI-powered platform helps you monitor eye health and connect with specialists for comprehensive eye care solutions in the Lake Basin region.',
-            'author': 'Dr. Stacy Kivindyo',
+            'author': specialist,  # Use User instance, not string
             'category': 'welcome'
         },
         {
-            'title': 'Understanding Digital Eye Strain',
+            'title': 'Understanding Digital Eye Strain', 
             'content': 'With increased screen time, learn how to protect your eyes from digital strain with our simple prevention tips and regular checkups.',
-            'author': 'Achievers Team',
+            'author': superuser,  # Use User instance, not string
             'category': 'eye_care'
         }
     ]
@@ -87,6 +89,15 @@ def create_articles():
             print(f"✅ Created article: {article.title}")
 
 if __name__ == '__main__':
-    create_users()
-    create_articles()
-    print("🎉 All users and articles created successfully!")
+    print("Creating users...")
+    superuser, specialist = create_users()
+    
+    print("\nCreating articles...")
+    create_articles(superuser, specialist)
+    
+    print("\n🎉 All users and articles created successfully!")
+    print("\n📋 Login Credentials:")
+    print("Admin: Achievers / achievers@123")
+    print("Specialist: StacyKivindyo / stacy@123")
+    print("Patient 1: ZainabSaners / zainab@123")
+    print("Patient 2: HerineAdhiambo / herine@123")
