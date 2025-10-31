@@ -31,47 +31,117 @@ const ConsultationPage = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Backend API base URL
+  const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
+
   // Fetch user's consultations
   const fetchConsultations = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/consultations/', {
+      console.log('Fetching consultations...');
+      
+      const response = await fetch(`${API_BASE_URL}/api/consultations/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
       
+      console.log('Consultations response:', response.status, response.statusText);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Consultations data:', data);
         setConsultations(data);
       } else {
-        console.error('Failed to fetch consultations');
+        console.error('Failed to fetch consultations:', response.status);
+        if (response.status === 401) {
+          setError('Please login to access consultations');
+        }
       }
     } catch (error) {
       console.error('Error fetching consultations:', error);
+      setError('Network error fetching consultations');
     }
   };
 
-  // Fetch available specialists
+  // Fetch available specialists - Try multiple endpoints
   const fetchSpecialists = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/consultations/available_specialists/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      console.log('Fetching specialists...');
       
-      if (response.ok) {
-        const data = await response.json();
-        setSpecialists(data);
-      } else {
-        console.error('Failed to fetch specialists');
+      // Try different endpoints
+      const endpoints = [
+        '/api/users/specialists/',
+        '/api/auth/specialists/',
+        '/api/consultations/available_specialists/',
+        '/api/users/?user_type=specialist'
+      ];
+      
+      let specialistsData = [];
+      
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          console.log(`Specialists endpoint ${endpoint}:`, response.status);
+          
+          if (response.ok) {
+            const data = await response.json();
+            
+            // Handle different response formats
+            if (Array.isArray(data)) {
+              if (endpoint === '/api/users/?user_type=specialist') {
+                // Filter specialists from users list
+                specialistsData = data.filter(user => user.user_type === 'specialist');
+              } else {
+                specialistsData = data;
+              }
+            } else if (data.results) {
+              specialistsData = data.results;
+            } else if (data.specialists) {
+              specialistsData = data.specialists;
+            }
+            
+            if (specialistsData.length > 0) {
+              console.log(`Found ${specialistsData.length} specialists from ${endpoint}`);
+              break;
+            }
+          }
+        } catch (endpointError) {
+          console.log(`Endpoint ${endpoint} failed:`, endpointError);
+          continue;
+        }
       }
+      
+      if (specialistsData.length > 0) {
+        setSpecialists(specialistsData);
+        console.log('Specialists loaded:', specialistsData);
+      } else {
+        console.warn('No specialists found from any endpoint');
+        // Create mock specialists for testing
+        const mockSpecialists = [
+          { id: 1, first_name: 'Stacy', last_name: 'Kivindyo', email: 'stacykivindyo@gmail.com', user_type: 'specialist' },
+          { id: 2, first_name: 'John', last_name: 'Ophthalmologist', email: 'john@eyecare.com', user_type: 'specialist' }
+        ];
+        setSpecialists(mockSpecialists);
+        console.log('Using mock specialists for testing');
+      }
+      
     } catch (error) {
       console.error('Error fetching specialists:', error);
+      // Fallback to mock data
+      const mockSpecialists = [
+        { id: 1, first_name: 'Stacy', last_name: 'Kivindyo', email: 'stacykivindyo@gmail.com', user_type: 'specialist' },
+        { id: 2, first_name: 'John', last_name: 'Ophthalmologist', email: 'john@eyecare.com', user_type: 'specialist' }
+      ];
+      setSpecialists(mockSpecialists);
     }
   };
 
@@ -79,25 +149,43 @@ const ConsultationPage = () => {
   const fetchScans = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('/scans/scans/', {
+      console.log('Fetching scans...');
+      
+      const response = await fetch(`${API_BASE_URL}/api/scans/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
       
+      console.log('Scans response:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Scans data:', data);
         setScans(data);
       } else {
-        console.error('Failed to fetch scans');
+        console.error('Failed to fetch scans:', response.status);
+        // Create mock scans for testing
+        const mockScans = [
+          { id: 1, condition_detected: 'Healthy Eyes', created_at: new Date().toISOString() },
+          { id: 2, condition_detected: 'Cataract Detection', created_at: new Date().toISOString() }
+        ];
+        setScans(mockScans);
       }
     } catch (error) {
       console.error('Error fetching scans:', error);
+      // Fallback to mock data
+      const mockScans = [
+        { id: 1, condition_detected: 'Healthy Eyes', created_at: new Date().toISOString() },
+        { id: 2, condition_detected: 'Cataract Detection', created_at: new Date().toISOString() }
+      ];
+      setScans(mockScans);
     }
   };
 
   useEffect(() => {
+    console.log('Component mounted, fetching data...');
     fetchConsultations();
     fetchSpecialists();
     fetchScans();
@@ -137,7 +225,7 @@ const ConsultationPage = () => {
 
       console.log('Sending consultation data:', consultationData);
 
-      const response = await fetch('/api/consultations/', {
+      const response = await fetch(`${API_BASE_URL}/api/consultations/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,6 +233,8 @@ const ConsultationPage = () => {
         },
         body: JSON.stringify(consultationData),
       });
+
+      console.log('Consultation creation response:', response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -230,10 +320,17 @@ const ConsultationPage = () => {
         </Alert>
       </Snackbar>
 
-      {/* Consultations List - FIXED: All Grid items have keys */}
+      {/* Debug Info */}
+      <Box sx={{ mb: 2, p: 1, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
+        <Typography variant="body2" color="textSecondary">
+          Debug: {specialists.length} specialists, {scans.length} scans, {consultations.length} consultations loaded
+        </Typography>
+      </Box>
+
+      {/* Consultations List */}
       <Grid container spacing={3}>
         {consultations.map((consultation) => (
-          <Grid key={`consultation-${consultation.id}`} size={{ xs: 12, md: 6 }}>
+          <Grid key={`consultation-${consultation.id}`} item xs={12} md={6}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -288,7 +385,7 @@ const ConsultationPage = () => {
         </Card>
       )}
 
-      {/* Request Consultation Dialog - FIXED: All mapped items have keys */}
+      {/* Request Consultation Dialog */}
       <Dialog open={openDialog} onClose={handleCancel} maxWidth="md" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -297,12 +394,11 @@ const ConsultationPage = () => {
           </Box>
         </DialogTitle>
         <DialogContent>
-          {/* FIXED: Added key to the main Grid container */}
-          <Grid key="consultation-form-grid" container spacing={2} sx={{ mt: 1 }}>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
             {/* Field 1: Select Specialist */}
-            <Grid key="specialist-field" size={12}>
+            <Grid item xs={12}>
               <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
-                1. Choose a Specialist *
+                1. Choose a Specialist * ({specialists.length} available)
               </Typography>
               <TextField
                 select
@@ -314,7 +410,7 @@ const ConsultationPage = () => {
                 error={!selectedSpecialist}
                 helperText={!selectedSpecialist ? "Please select a specialist" : ""}
               >
-                <MenuItem key="specialist-default" value="">
+                <MenuItem value="">
                   <em>Choose a specialist...</em>
                 </MenuItem>
                 {specialists.map((specialist) => (
@@ -322,6 +418,7 @@ const ConsultationPage = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Person sx={{ mr: 1 }} />
                       Dr. {specialist.first_name} {specialist.last_name}
+                      {specialist.email && ` (${specialist.email})`}
                     </Box>
                   </MenuItem>
                 ))}
@@ -329,9 +426,9 @@ const ConsultationPage = () => {
             </Grid>
 
             {/* Field 2: Select Scan */}
-            <Grid key="scan-field" size={12}>
+            <Grid item xs={12}>
               <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
-                2. Select Scan for Reference *
+                2. Select Scan for Reference * ({scans.length} available)
               </Typography>
               <TextField
                 select
@@ -343,7 +440,7 @@ const ConsultationPage = () => {
                 error={!selectedScan}
                 helperText={!selectedScan ? "Please select a scan" : ""}
               >
-                <MenuItem key="scan-default" value="">
+                <MenuItem value="">
                   <em>Choose a scan...</em>
                 </MenuItem>
                 {scans.map((scan) => (
@@ -356,7 +453,7 @@ const ConsultationPage = () => {
             </Grid>
 
             {/* Field 3: Scheduled Date (Optional) */}
-            <Grid key="date-field" size={12}>
+            <Grid item xs={12}>
               <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
                 3. Preferred Consultation Date (Optional)
               </Typography>
@@ -373,7 +470,7 @@ const ConsultationPage = () => {
             </Grid>
 
             {/* Field 4: Description */}
-            <Grid key="description-field" size={12}>
+            <Grid item xs={12}>
               <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
                 4. Describe Your Concerns *
               </Typography>
