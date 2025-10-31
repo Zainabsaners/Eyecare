@@ -16,8 +16,16 @@ class IsAdminOrSpecialist(permissions.BasePermission):
             request.user.is_staff
         )
 
+class AllowAnyForCreate(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method == 'POST':  # Allow anyone to create contact messages
+            return True
+        # For other methods, require authentication
+        return request.user.is_authenticated
+
 class ContactMessageViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    # CHANGE THIS LINE - Allow anyone to create, but require auth for listing
+    permission_classes = [AllowAnyForCreate]
     
     def get_serializer_class(self):
         if self.action == 'create':

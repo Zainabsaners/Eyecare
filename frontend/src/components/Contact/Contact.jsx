@@ -39,7 +39,11 @@ const Contact = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('/contact-messages/', formData);
+      const response = await axios.post('/contact/contact-messages/', formData,{
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       setSuccess(response.data.message || 'Thank you for your message! Our team will get back to you soon.');
       setFormData({
@@ -87,7 +91,7 @@ const Contact = () => {
           </p>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: '#333', marginBottom: '1rem' }}>Ì≥ç Our Location</h3>
+            <h3 style={{ color: '#333', marginBottom: '1rem' }}>ÔøΩÔøΩÔøΩ Our Location</h3>
             <p style={{ color: '#666', marginBottom: '1rem' }}>
               Lake Basin Region, Kenya<br />
               Kisumu City
@@ -95,7 +99,7 @@ const Contact = () => {
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: '#333', marginBottom: '1rem' }}>Ì≥û Contact Information</h3>
+            <h3 style={{ color: '#333', marginBottom: '1rem' }}>ÔøΩÔøΩÔøΩ Contact Information</h3>
             <p style={{ color: '#666', marginBottom: '0.5rem' }}>
               <strong>Phone:</strong> +254 700 000 000
             </p>
@@ -108,7 +112,7 @@ const Contact = () => {
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: '#333', marginBottom: '1rem' }}>Ì±• Who Will Help You?</h3>
+            <h3 style={{ color: '#333', marginBottom: '1rem' }}>ÔøΩÔøΩÔøΩ Who Will Help You?</h3>
             <p style={{ color: '#666', marginBottom: '0.5rem' }}>
               <strong>Specialists:</strong> Ophthalmologists and eye care experts
             </p>
@@ -121,7 +125,7 @@ const Contact = () => {
           </div>
 
           <div>
-            <h3 style={{ color: '#333', marginBottom: '1rem' }}>Ì≤° Need Immediate Help?</h3>
+            <h3 style={{ color: '#333', marginBottom: '1rem' }}>ÔøΩÔøΩÔøΩ Need Immediate Help?</h3>
             <p style={{ color: '#666' }}>
               For urgent eye care concerns, please visit your nearest healthcare facility 
               or contact emergency services.
