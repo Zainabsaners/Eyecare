@@ -137,7 +137,7 @@ DATABASES = {
     }
 }
 
-# Use PostgreSQL if DATABASE_URL exists (on Render)
+# Use Neon PostgreSQL if DATABASE_URL exists
 if 'DATABASE_URL' in os.environ:
     import dj_database_url
     DATABASES['default'] = dj_database_url.config(
@@ -145,6 +145,9 @@ if 'DATABASE_URL' in os.environ:
         conn_max_age=600,
         ssl_require=True
     )
+    
+    # FORCE PostgreSQL engine - THIS IS THE CRITICAL FIX!
+    DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
