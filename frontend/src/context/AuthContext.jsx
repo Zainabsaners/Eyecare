@@ -16,9 +16,14 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Set base URL for API calls
+  // Set base URL for API calls - UPDATED FOR PRODUCTION
   useEffect(() => {
-    axios.defaults.baseURL = 'http://localhost:8000/api';
+    // Use environment variable for production, fallback to localhost for development
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+    axios.defaults.baseURL = API_BASE_URL;
+    
+    // Log for debugging (remove in production if needed)
+    console.log('API Base URL:', API_BASE_URL);
   }, []);
 
   useEffect(() => {
