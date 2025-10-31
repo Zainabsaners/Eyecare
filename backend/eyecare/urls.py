@@ -24,7 +24,21 @@ def api_root(request):
     })
 
 def health_check(request):
-    return JsonResponse({"status": "healthy", "service": "EyeCare API", "database": "checking..."})
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user_count = User.objects.count()
+        return JsonResponse({
+            "status": "healthy", 
+            "database": "working",
+            "user_count": user_count
+        })
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "database": "broken", 
+            "error": str(e)
+        }, status=500)
 
 urlpatterns = [
     path('', api_root, name='api-root'),
