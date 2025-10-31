@@ -148,6 +148,8 @@ if 'DATABASE_URL' in os.environ:
     
     # FORCE PostgreSQL engine - THIS IS THE CRITICAL FIX!
     DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+    DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
+
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
