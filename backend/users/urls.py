@@ -1,22 +1,51 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from django.http import JsonResponse
 from . import views
 
-# Add this root view function
+# Root endpoint that works with GET
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def auth_overview(request):
-    return JsonResponse({
+    return Response({
         "message": "EyeCare Authentication API",
         "status": "active",
         "endpoints": {
-            "login": "/api/auth/login/",
-            "register": "/api/auth/register/",
-            "token_refresh": "/api/token/refresh/"
-        }
+            "login": "POST /api/auth/login/",
+            "register": "POST /api/auth/register/", 
+            "token_refresh": "POST /api/token/refresh/"
+        },
+        "note": "Login and register endpoints require POST requests"
+    })
+
+# Add GET endpoints that explain how to use the API
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def register_info(request):
+    return Response({
+        "endpoint": "POST /api/auth/register/",
+        "description": "Register a new user",
+        "required_fields": ["username", "email", "password", "user_type"],
+        "user_types": ["patient", "specialist"],
+        "for_specialists": ["specialization", "license_number"]
+    })
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def login_info(request):
+    return Response({
+        "endpoint": "POST /api/auth/login/", 
+        "description": "Login user and get JWT tokens",
+        "required_fields": ["username", "password"],
+        "returns": ["access_token", "refresh_token", "user_data"]
     })
 
 urlpatterns = [
-    path('', auth_overview, name='auth_api_overview'),  # ← ADD THIS LINE (Root endpoint)
+    path('', auth_overview, name='auth_api_overview'),
     path('register/', views.register, name='register'),
-    path('login/', views.login, name='login'),  # Keep your custom login view
+    path('register/info/', register_info, name='register_info'),  # GET endpoint
+    path('login/', views.login, name='login'),
+    path('login/info/', login_info, name='login_info'),  # GET endpoint
 ]
