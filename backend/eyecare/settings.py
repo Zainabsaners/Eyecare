@@ -77,13 +77,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'eyecare.wsgi.application'
 
-# REST Framework configuration - Make it more permissive for now
+# REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',  # Change to AllowAny for testing
+        'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
@@ -96,15 +96,14 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# CORS settings - More permissive for development
+# CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5174",
-    "https://eyecare-pi.vercel.app",  # ← Your actual Vercel domain
+    "https://eyecare-pi.vercel.app",
     "https://eyecare-utjw.onrender.com",
-
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -130,7 +129,7 @@ ADMIN_EMAILS = [
     'stacykivindyo@gmail.com'
 ]
 
-# Database - Use PostgreSQL on Render
+# Database Configuration - UPDATED FOR POSTGRESQL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -138,7 +137,14 @@ DATABASES = {
     }
 }
 
-
+# Use PostgreSQL if DATABASE_URL exists (on Render)
+if 'DATABASE_URL' in os.environ:
+    import dj_database_url
+    DATABASES['default'] = dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -187,6 +193,8 @@ JAZZMIN_UI_TWEAKS = {
     "theme": "minty",
     "dark_mode_theme": "cyborg",
 }
+
+# Security settings
 SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
