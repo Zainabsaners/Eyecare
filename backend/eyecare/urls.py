@@ -24,7 +24,7 @@ def api_root(request):
     })
 
 def health_check(request):
-    return JsonResponse({"status": "healthy", "service": "EyeCare API"})
+    return JsonResponse({"status": "healthy", "service": "EyeCare API", "database": "checking..."})
 
 urlpatterns = [
     path('', api_root, name='api-root'),
