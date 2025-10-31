@@ -34,13 +34,14 @@ const ConsultationPage = () => {
   // Backend API base URL
   const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
-  // Fetch user's consultations - FIXED: Handle array response
+  // Fetch user's consultations - FIXED: Use correct endpoint
   const fetchConsultations = async () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('Fetching consultations...');
       
-      const response = await fetch(`${API_BASE_URL}/api/consultations/`, {
+      // Use the actual consultations data endpoint
+      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -53,13 +54,11 @@ const ConsultationPage = () => {
         const data = await response.json();
         console.log('Consultations data:', data);
         
-        // FIX: Ensure data is an array
+        // Handle different response formats
         if (Array.isArray(data)) {
           setConsultations(data);
         } else if (data.results && Array.isArray(data.results)) {
           setConsultations(data.results);
-        } else if (Array.isArray(data.consultations)) {
-          setConsultations(data.consultations);
         } else {
           console.warn('Consultations data is not an array:', data);
           setConsultations([]);
@@ -75,65 +74,58 @@ const ConsultationPage = () => {
     }
   };
 
-  // Fetch available specialists - FIXED: Use mock data since endpoints don't exist
+  // Fetch available specialists - FIXED: Get specialists from users endpoint
   const fetchSpecialists = async () => {
     try {
+      const token = localStorage.getItem('access_token');
       console.log('Fetching specialists...');
       
-      // Since all specialist endpoints return 404, use mock data
-      const mockSpecialists = [
-        { 
-          id: 2, 
-          first_name: 'Stacy', 
-          last_name: 'Kivindyo', 
-          email: 'stacykivindyo@gmail.com', 
-          user_type: 'specialist',
-          specialization: 'Ophthalmology'
+      // Get all users and filter for specialists
+      const response = await fetch(`${API_BASE_URL}/api/users/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        { 
-          id: 3, 
-          first_name: 'John', 
-          last_name: 'Smith', 
-          email: 'john.smith@eyecare.com', 
-          user_type: 'specialist',
-          specialization: 'Retina Specialist'
-        },
-        { 
-          id: 4, 
-          first_name: 'Sarah', 
-          last_name: 'Johnson', 
-          email: 'sarah.johnson@eyecare.com', 
-          user_type: 'specialist',
-          specialization: 'Pediatric Ophthalmology'
+      });
+      
+      console.log('Users response:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Users data:', data);
+        
+        let users = [];
+        
+        // Handle different response formats
+        if (Array.isArray(data)) {
+          users = data;
+        } else if (data.results && Array.isArray(data.results)) {
+          users = data.results;
         }
-      ];
-      
-      setSpecialists(mockSpecialists);
-      console.log('Using mock specialists:', mockSpecialists);
-      
+        
+        // Filter for specialists only
+        const specialistUsers = users.filter(user => user.user_type === 'specialist');
+        console.log('Filtered specialists:', specialistUsers);
+        setSpecialists(specialistUsers);
+        
+      } else {
+        console.error('Failed to fetch users:', response.status);
+        setSpecialists([]);
+      }
     } catch (error) {
       console.error('Error fetching specialists:', error);
-      // Fallback to mock data
-      const mockSpecialists = [
-        { 
-          id: 2, 
-          first_name: 'Stacy', 
-          last_name: 'Kivindyo', 
-          email: 'stacykivindyo@gmail.com', 
-          user_type: 'specialist' 
-        }
-      ];
-      setSpecialists(mockSpecialists);
+      setSpecialists([]);
     }
   };
 
-  // Fetch user's scans - FIXED: Handle array response
+  // Fetch user's scans - FIXED: Use correct scans endpoint
   const fetchScans = async () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('Fetching scans...');
       
-      const response = await fetch(`${API_BASE_URL}/api/scans/`, {
+      // Use the actual scans data endpoint
+      const response = await fetch(`${API_BASE_URL}/api/scans/scans/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -146,39 +138,22 @@ const ConsultationPage = () => {
         const data = await response.json();
         console.log('Scans data:', data);
         
-        // FIX: Ensure data is an array
+        // Handle different response formats
         if (Array.isArray(data)) {
           setScans(data);
         } else if (data.results && Array.isArray(data.results)) {
           setScans(data.results);
-        } else if (Array.isArray(data.scans)) {
-          setScans(data.scans);
         } else {
           console.warn('Scans data is not an array:', data);
-          // Create mock scans for testing
-          const mockScans = [
-            { id: 1, condition_detected: 'Healthy Eyes', created_at: new Date().toISOString() },
-            { id: 2, condition_detected: 'Cataract Detection', created_at: new Date().toISOString() }
-          ];
-          setScans(mockScans);
+          setScans([]);
         }
       } else {
         console.error('Failed to fetch scans:', response.status);
-        // Create mock scans for testing
-        const mockScans = [
-          { id: 1, condition_detected: 'Healthy Eyes', created_at: new Date().toISOString() },
-          { id: 2, condition_detected: 'Cataract Detection', created_at: new Date().toISOString() }
-        ];
-        setScans(mockScans);
+        setScans([]);
       }
     } catch (error) {
       console.error('Error fetching scans:', error);
-      // Fallback to mock data
-      const mockScans = [
-        { id: 1, condition_detected: 'Healthy Eyes', created_at: new Date().toISOString() },
-        { id: 2, condition_detected: 'Cataract Detection', created_at: new Date().toISOString() }
-      ];
-      setScans(mockScans);
+      setScans([]);
     }
   };
 
@@ -223,7 +198,8 @@ const ConsultationPage = () => {
 
       console.log('Sending consultation data:', consultationData);
 
-      const response = await fetch(`${API_BASE_URL}/api/consultations/`, {
+      // FIXED: Use the correct consultations endpoint for POST
+      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -236,7 +212,6 @@ const ConsultationPage = () => {
 
       if (response.ok) {
         const data = await response.json();
-        // FIX: Ensure consultations is always an array
         setConsultations(prev => Array.isArray(prev) ? [data, ...prev] : [data]);
         setOpenDialog(false);
         resetForm();
@@ -286,8 +261,10 @@ const ConsultationPage = () => {
     }
   };
 
-  // FIX: Ensure consultations is always an array for mapping
+  // Ensure data is always arrays for mapping
   const consultationsToDisplay = Array.isArray(consultations) ? consultations : [];
+  const specialistsToDisplay = Array.isArray(specialists) ? specialists : [];
+  const scansToDisplay = Array.isArray(scans) ? scans : [];
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -325,11 +302,11 @@ const ConsultationPage = () => {
       {/* Debug Info */}
       <Box sx={{ mb: 2, p: 1, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
         <Typography variant="body2" color="textSecondary">
-          Loaded: {specialists.length} specialists, {scans.length} scans, {consultationsToDisplay.length} consultations
+          Loaded: {specialistsToDisplay.length} specialists, {scansToDisplay.length} scans, {consultationsToDisplay.length} consultations
         </Typography>
       </Box>
 
-      {/* Consultations List - FIXED: Using consultationsToDisplay which is always an array */}
+      {/* Consultations List */}
       <Grid container spacing={3}>
         {consultationsToDisplay.map((consultation) => (
           <Grid key={`consultation-${consultation.id}`} item xs={12} md={6}>
@@ -400,7 +377,7 @@ const ConsultationPage = () => {
             {/* Field 1: Select Specialist */}
             <Grid item xs={12}>
               <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
-                1. Choose a Specialist * ({specialists.length} available)
+                1. Choose a Specialist * ({specialistsToDisplay.length} available)
               </Typography>
               <TextField
                 select
@@ -415,7 +392,7 @@ const ConsultationPage = () => {
                 <MenuItem value="">
                   <em>Choose a specialist...</em>
                 </MenuItem>
-                {specialists.map((specialist) => (
+                {specialistsToDisplay.map((specialist) => (
                   <MenuItem key={`specialist-${specialist.id}`} value={specialist.id}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Person sx={{ mr: 1 }} />
@@ -430,7 +407,7 @@ const ConsultationPage = () => {
             {/* Field 2: Select Scan */}
             <Grid item xs={12}>
               <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
-                2. Select Scan for Reference * ({scans.length} available)
+                2. Select Scan for Reference * ({scansToDisplay.length} available)
               </Typography>
               <TextField
                 select
@@ -445,7 +422,7 @@ const ConsultationPage = () => {
                 <MenuItem value="">
                   <em>Choose a scan...</em>
                 </MenuItem>
-                {scans.map((scan) => (
+                {scansToDisplay.map((scan) => (
                   <MenuItem key={`scan-${scan.id}`} value={scan.id}>
                     Scan #{scan.id} - {scan.condition_detected || 'Eye Scan'} 
                     ({new Date(scan.created_at).toLocaleDateString()})
