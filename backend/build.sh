@@ -27,4 +27,4 @@ if not User.objects.filter(username='Achievers').exists():
     User.objects.create_user('ZainabSaners', 'zainab.saners@example.com', 'zainab@123', first_name='Zainab', last_name='Saners', user_type='patient')
     User.objects.create_user('HerineAdhiambo', 'herine.adhiambo@example.com', 'herine@123', first_name='Herine', last_name='Adhiambo', user_type='patient')
     print('✅ Initial users created!')
-"
+"# Deployment timestamp: Fri, Oct 31, 2025  3:10:16 PM
