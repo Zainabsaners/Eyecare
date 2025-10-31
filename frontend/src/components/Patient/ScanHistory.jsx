@@ -18,7 +18,23 @@ const ScanHistory = () => {
 
   const fetchScans = async () => {
     try {
-      const response = await axios.get('/scans/');
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        setError('Please login to view your scans.');
+        setLoading(false);
+        return;
+      }
+
+      // FIXED: Use correct endpoint with authentication
+      const response = await axios.get('/scans/scans/', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('Scans response:', response.data); // Debug log
+      
       if (Array.isArray(response.data)) {
         setScans(response.data);
       } else if (response.data && Array.isArray(response.data.results)) {
@@ -28,7 +44,13 @@ const ScanHistory = () => {
       }
     } catch (error) {
       console.error('Error fetching scans:', error);
-      setError('Failed to load scan history.');
+      if (error.response?.status === 401) {
+        setError('Session expired. Please login again.');
+      } else if (error.response?.status === 404) {
+        setError('Scans endpoint not found. Please contact support.');
+      } else {
+        setError('Failed to load scan history.');
+      }
     } finally {
       setLoading(false);
     }
@@ -168,9 +190,11 @@ const ScanHistory = () => {
                     </h3>
                     <p style={{ margin: '0', color: '#666' }}>
                       Condition: <strong style={{ color: getConditionColor(scan.condition_detected) }}>
-                        {scan.condition_detected}
+                        {scan.condition_detected || 'No condition detected'}
                       </strong> 
-                      ({(scan.confidence_score * 100).toFixed(1)}% confidence)
+                      {scan.confidence_score && (
+                        <span> ({(scan.confidence_score * 100).toFixed(1)}% confidence)</span>
+                      )}
                     </p>
                     <p style={{ margin: '0.5rem 0 0 0', color: '#666', fontSize: '0.9rem' }}>
                       Uploaded: {new Date(scan.created_at).toLocaleDateString('en-US', {

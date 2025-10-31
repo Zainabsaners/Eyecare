@@ -79,7 +79,7 @@ const ConsultationPage = () => {
   const fetchScans = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/scans/', {
+      const response = await fetch('/scans/scans/', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
