@@ -83,7 +83,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',  # Change to AllowAny for testing
+        'rest_framework.permissions.IsAuthenticated',  # Change to AllowAny for testing
     ),
 }
 
@@ -179,3 +179,10 @@ JAZZMIN_UI_TWEAKS = {
     "theme": "minty",
     "dark_mode_theme": "cyborg",
 }
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
