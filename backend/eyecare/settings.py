@@ -97,7 +97,15 @@ SIMPLE_JWT = {
 }
 
 # CORS settings - More permissive for development
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all for now, restrict later
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "https://eyecare-pi.vercel.app",  # ← Your actual Vercel domain
+    "https://eyecare-utjw.onrender.com",
+
+]
 CORS_ALLOW_CREDENTIALS = True
 
 # Media files
