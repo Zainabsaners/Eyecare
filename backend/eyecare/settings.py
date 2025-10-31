@@ -86,6 +86,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
 }
+# Allow public access to articles API
+from rest_framework.permissions import AllowAny
+ARTICLE_PERMISSION_CLASSES = [AllowAny]
 
 # Simple JWT Configuration
 SIMPLE_JWT = {
