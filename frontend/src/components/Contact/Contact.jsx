@@ -39,7 +39,7 @@ const Contact = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('/contact/contact-messages/', formData,{
+      const response = await axios.post('${API_BASE_URL}/api/contact/contact-messages/', formData,{
         headers: {
           'Content-Type': 'application/json'
         }
