@@ -74,49 +74,41 @@ const ConsultationPage = () => {
     }
   };
 
-  // Fetch available specialists - FIXED: Get specialists from users endpoint
-  const fetchSpecialists = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      console.log('Fetching specialists...');
+   const fetchSpecialists = async () => {
+  try {
+    const token = localStorage.getItem('access_token');
+    console.log('Fetching specialists...');
+    
+    // Use the new specialists endpoint
+    const response = await fetch(`${API_BASE_URL}/api/auth/specialists/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    console.log('Specialists response:', response.status);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Specialists data:', data);
       
-      // Get all users and filter for specialists
-      const response = await fetch(`${API_BASE_URL}/api/users/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      console.log('Users response:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Users data:', data);
-        
-        let users = [];
-        
-        // Handle different response formats
-        if (Array.isArray(data)) {
-          users = data;
-        } else if (data.results && Array.isArray(data.results)) {
-          users = data.results;
-        }
-        
-        // Filter for specialists only
-        const specialistUsers = users.filter(user => user.user_type === 'specialist');
-        console.log('Filtered specialists:', specialistUsers);
-        setSpecialists(specialistUsers);
-        
+      if (Array.isArray(data)) {
+        setSpecialists(data);
       } else {
-        console.error('Failed to fetch users:', response.status);
+        console.warn('Specialists data is not an array:', data);
         setSpecialists([]);
       }
-    } catch (error) {
-      console.error('Error fetching specialists:', error);
+    } else {
+      console.error('Failed to fetch specialists:', response.status);
       setSpecialists([]);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching specialists:', error);
+    setSpecialists([]);
+  }
+};
+
 
   // Fetch user's scans - FIXED: Use correct scans endpoint
   const fetchScans = async () => {
