@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.http import JsonResponse
 from . import views
@@ -14,8 +14,10 @@ def auth_overview(request):
         "status": "active",
         "endpoints": {
             "login": "POST /api/auth/login/",
-            "register": "POST /api/auth/register/", 
-            "token_refresh": "POST /api/token/refresh/"
+            "register": "POST /api/auth/register/",
+            "token_refresh": "POST /api/token/refresh/",
+            "specialists": "GET /api/auth/specialists/",
+            "users": "GET /api/auth/users/"
         },
         "note": "Login and register endpoints require POST requests"
     })
@@ -36,7 +38,7 @@ def register_info(request):
 @permission_classes([AllowAny])
 def login_info(request):
     return Response({
-        "endpoint": "POST /api/auth/login/", 
+        "endpoint": "POST /api/auth/login/",
         "description": "Login user and get JWT tokens",
         "required_fields": ["username", "password"],
         "returns": ["access_token", "refresh_token", "user_data"]
@@ -45,7 +47,11 @@ def login_info(request):
 urlpatterns = [
     path('', auth_overview, name='auth_api_overview'),
     path('register/', views.register, name='register'),
-    path('register/info/', register_info, name='register_info'),  # GET endpoint
+    path('register/info/', register_info, name='register_info'),
     path('login/', views.login, name='login'),
-    path('login/info/', login_info, name='login_info'),  # GET endpoint
+    path('login/info/', login_info, name='login_info'),
+    
+    # NEW ENDPOINTS - Add these lines
+    path('specialists/', views.get_specialists, name='get_specialists'),
+    path('users/', views.get_users, name='get_users'),
 ]
