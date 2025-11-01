@@ -43,6 +43,12 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         
         contact_message = serializer.save()
+
+        print(f"=== CONTACT MESSAGE CREATED ===")
+        print(f"Message ID: {contact_message.id}")
+        print(f"From: {contact_message.name} ({contact_message.email})")
+        print(f"Subject: {contact_message.subject}")
+
         
         # Send email notifications
         self.send_notification_emails(contact_message)
@@ -60,6 +66,7 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
     def send_notification_emails(self, contact_message):
         """Send email notifications to admins and specialists"""
         try:
+            print("🎯 send_notification_emails method CALLED")
             # Get recipients from settings AND from user database
             recipient_list = list(settings.ADMIN_EMAILS)  # Start with admin emails from settings
             
