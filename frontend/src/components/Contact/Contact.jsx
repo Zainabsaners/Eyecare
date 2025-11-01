@@ -14,6 +14,9 @@ const Contact = () => {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
+  // ADD THIS LINE - Define the API base URL
+  const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
+
   // Pre-fill form if user is logged in
   React.useEffect(() => {
     if (user) {
@@ -39,7 +42,8 @@ const Contact = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('${API_BASE_URL}/api/contact/contact-messages/', formData,{
+      // FIXED: Use backticks (`) instead of single quotes (') for template literal
+      const response = await axios.post(`${API_BASE_URL}/api/contact/contact-messages/`, formData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -91,7 +95,7 @@ const Contact = () => {
           </p>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: '#333', marginBottom: '1rem' }}>��� Our Location</h3>
+            <h3 style={{ color: '#333', marginBottom: '1rem' }}>📍 Our Location</h3>
             <p style={{ color: '#666', marginBottom: '1rem' }}>
               Lake Basin Region, Kenya<br />
               Kisumu City
@@ -99,7 +103,7 @@ const Contact = () => {
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: '#333', marginBottom: '1rem' }}>��� Contact Information</h3>
+            <h3 style={{ color: '#333', marginBottom: '1rem' }}>📞 Contact Information</h3>
             <p style={{ color: '#666', marginBottom: '0.5rem' }}>
               <strong>Phone:</strong> +254 700 000 000
             </p>
@@ -112,7 +116,7 @@ const Contact = () => {
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ color: '#333', marginBottom: '1rem' }}>��� Who Will Help You?</h3>
+            <h3 style={{ color: '#333', marginBottom: '1rem' }}>👥 Who Will Help You?</h3>
             <p style={{ color: '#666', marginBottom: '0.5rem' }}>
               <strong>Specialists:</strong> Ophthalmologists and eye care experts
             </p>
@@ -125,7 +129,7 @@ const Contact = () => {
           </div>
 
           <div>
-            <h3 style={{ color: '#333', marginBottom: '1rem' }}>��� Need Immediate Help?</h3>
+            <h3 style={{ color: '#333', marginBottom: '1rem' }}>🚨 Need Immediate Help?</h3>
             <p style={{ color: '#666' }}>
               For urgent eye care concerns, please visit your nearest healthcare facility 
               or contact emergency services.
