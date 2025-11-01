@@ -39,10 +39,17 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
         return ContactMessage.objects.none()
     
     def create(self, request, *args, **kwargs):
+        print("🎯 ContactMessageViewSet.create() method CALLED")
+
         serializer = self.get_serializer(data=request.data)
+        print("🎯 Serializer created")
+
         serializer.is_valid(raise_exception=True)
+        print("🎯 Serializer validation passed")
         
         contact_message = serializer.save()
+        print(f"🎯 Contact message saved to database - ID: {contact_message.id}")
+        print("🎯 About to call send_notification_emails...")
 
         print(f"=== CONTACT MESSAGE CREATED ===")
         print(f"Message ID: {contact_message.id}")
@@ -65,8 +72,11 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
     
     def send_notification_emails(self, contact_message):
         """Send email notifications to admins and specialists"""
+        print("🎯 send_notification_emails method CALLED")
         try:
-            print("🎯 send_notification_emails method CALLED")
+            print("=== EMAIL SENDING PROCESS STARTED ===")
+            print(f"Contact Message: {contact_message.name} - {contact_message.subject}")
+            
             # Get recipients from settings AND from user database
             recipient_list = list(settings.ADMIN_EMAILS)  # Start with admin emails from settings
             
@@ -115,6 +125,7 @@ EyeCare Vision AI Team
         except Exception as e:
             print(f"Error sending notification emails: {str(e)}")
             # You might want to log this error for debugging
+        print("🎯 send_notification_emails method COMPLETED")
     
     @action(detail=True, methods=['post'], permission_classes=[IsAdminOrSpecialist])
     def assign_to_me(self, request, pk=None):

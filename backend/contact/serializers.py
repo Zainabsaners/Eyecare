@@ -11,6 +11,13 @@ class ContactMessageCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactMessage
         fields = ('name', 'email', 'subject', 'message')
+
+    def create(self, validated_data):
+        print("🎯 ContactMessageCreateSerializer.create() called")
+        print(f"🎯 Validated data: {validated_data}")
+        instance = super().create(validated_data)
+        print(f"🎯 Contact message instance created: {instance.id}")
+        return instance
     
     def validate_subject(self, value):
         if len(value.strip()) < 5:
