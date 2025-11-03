@@ -97,10 +97,19 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
         
         try:
             logger.info("=== 📧 EMAIL SENDING PROCESS STARTED ===")
+            import resend
+            # Set API key
+            resend.api_key = settings.RESEND_API_KEY
+            logger.info("✅ Resend API key configured")
+
             
             # Step 1: Prepare recipient list
             recipient_list = list(settings.ADMIN_EMAILS)
             logger.info(f"📧 Initial recipients from settings: {recipient_list}")
+
+            if not recipient_list:
+               logger.error("❌ No valid email addresses found for notifications")
+               return False
             
             # Step 2: Add admins and specialists from database
             users = User.objects.filter(
@@ -195,12 +204,41 @@ def test_email_directly(request):
     logger.info("🧪🧪🧪 TEST EMAIL ENDPOINT CALLED 🧪🧪🧪")
     
     try:
-        logger.info("📧 Testing email configuration...")
-        logger.info(f"🔧 EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
-        logger.info(f"🔧 EMAIL_HOST: {settings.EMAIL_HOST}")
-        logger.info(f"🔧 EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
-        logger.info(f"🔧 DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}")
-        logger.info(f"🔧 ADMIN_EMAILS: {settings.ADMIN_EMAILS}")
+        import resend
+        # Set API key
+        resend.api_key = settings.RESEND_API_KEY
+        logger.info("✅ Resend API key configured")
+
+        subject = 'TEST: Direct Email from EyeCare Vision AI'
+        html_content = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }}
+                .header {{ background-color: #4CAF50; color: white; padding: 10px 0; text-align: center; border-radius: 5px 5px 0 0; }}
+                .content {{ background: #f9f9f9; padding: 20px; }}
+                </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>EyeCare Vision AI - Test Email Successful</h1>
+                </div>
+                <div class="content">
+                    <p>Dear Admin,</p>
+                    <p>This is a <strong>test email</strong> sent directly from the EyeCare Vision AI application to verify that the email sending functionality is working correctly.</p>
+                    <p>If you have received this email, it means that the email configuration is set up properly.</p>
+                    </div>
+                    </div>
+        </body>
+        </html>
+        """
+
+        text_content = "This is a test email sent directly from the EyeCare Vision AI application to verify that the email sending functionality is working correctly."
+
+
         
         subject = 'TEST: Direct Email from EyeCare Vision AI'
         message = 'This is a direct test email from the EyeCare Vision AI application to verify that email sending is working correctly.'
@@ -209,14 +247,15 @@ def test_email_directly(request):
         logger.info(f"   From: {settings.DEFAULT_FROM_EMAIL}")
         logger.info(f"   To: {settings.ADMIN_EMAILS}")
         logger.info(f"   Subject: {subject}")
-        
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=settings.ADMIN_EMAILS,
-            fail_silently=False,
-        )
+
+        params = {
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": settings.ADMIN_EMAILS,
+            "subject": subject,
+            "html": html_content,
+            "text": text_content,
+        }
+        response = resend.emails.send(params)
         
         logger.info("✅✅✅ TEST EMAIL SENT SUCCESSFULLY ✅✅✅")
         return Response({

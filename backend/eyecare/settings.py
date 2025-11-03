@@ -114,20 +114,16 @@ CORS_ALLOW_CREDENTIALS = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
-
+# Email Configuration - Using Resend
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+DEFAULT_FROM_EMAIL = 'EyeCare Vision AI <onboarding@resend.dev>'
 ADMIN_EMAILS = [
     'triniquezainab@gmail.com',
     'stacykivindyo@gmail.com'
 ]
+
+# Since we're using Resend API, we don't need SMTP settings
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Fallback for development
 
 # Database Configuration - UPDATED FOR POSTGRESQL
 DATABASES = {
@@ -208,16 +204,7 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-print("=== EMAIL CONFIGURATION ===")
-print(f"DEBUG: {DEBUG}")
-print(f"EMAIL_BACKEND: {EMAIL_BACKEND}")
-print(f"EMAIL_HOST: {EMAIL_HOST}")
-print(f"EMAIL_PORT: {EMAIL_PORT}")
-print(f"EMAIL_USE_TLS: {EMAIL_USE_TLS}")
-print(f"EMAIL_HOST_USER: {'SET' if EMAIL_HOST_USER else 'NOT SET'}")
-print(f"EMAIL_HOST_PASSWORD: {'SET' if EMAIL_HOST_PASSWORD else 'NOT SET'}")
-print(f"DEFAULT_FROM_EMAIL: {DEFAULT_FROM_EMAIL}")
-print(f"ADMIN_EMAILS: {ADMIN_EMAILS}")
+
 
 # Add this to your settings.py
 LOGGING = {
