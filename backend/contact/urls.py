@@ -7,4 +7,5 @@ router.register(r'contact-messages', views.ContactMessageViewSet, basename='cont
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('test-email/', views.test_email_directly, name='test_email'),
 ]
