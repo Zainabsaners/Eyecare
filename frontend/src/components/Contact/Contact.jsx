@@ -97,15 +97,15 @@ const Contact = () => {
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ color: '#333', marginBottom: '1rem' }}>📍 Our Location</h3>
             <p style={{ color: '#666', marginBottom: '1rem' }}>
-              Lake Basin Region, Kenya<br />
-              Kisumu City
+              Western, Kenya<br />
+              Kakamega
             </p>
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ color: '#333', marginBottom: '1rem' }}>📞 Contact Information</h3>
             <p style={{ color: '#666', marginBottom: '0.5rem' }}>
-              <strong>Phone:</strong> +254 700 000 000
+              <strong>Phone:</strong> +254 702 640 917
             </p>
             <p style={{ color: '#666', marginBottom: '0.5rem' }}>
               <strong>Email:</strong> info@eyecare.ai
