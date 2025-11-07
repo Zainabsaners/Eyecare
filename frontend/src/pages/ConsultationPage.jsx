@@ -34,81 +34,100 @@ const ConsultationPage = () => {
   // Backend API base URL
   const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
-  // Fetch user's consultations - FIXED: Use correct endpoint
-  const fetchConsultations = async () => {
+  const testEndpoints = async () => {
+  const token = localStorage.getItem('access_token');
+  const endpoints = [
+    '/api/consultations/consultations/',
+    '/api/consultations/',
+    '/api/consultations/user/',
+    '/api/consultations/my-consultations/',
+    '/api/consultations/patient-consultations/',
+    '/api/consultations/specialist-consultations/',
+  ];
+
+  console.log('Testing endpoints...');
+  
+  for (const endpoint of endpoints) {
     try {
-      const token = localStorage.getItem('access_token');
-      console.log('Fetching consultations...');
-      
-      // Use the actual consultations data endpoint
-      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
       });
-      
-      console.log('Consultations response:', response.status, response.statusText);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Consultations data:', data);
-        
-        // Handle different response formats
-        if (Array.isArray(data)) {
-          setConsultations(data);
-        } else if (data.results && Array.isArray(data.results)) {
-          setConsultations(data.results);
-        } else {
-          console.warn('Consultations data is not an array:', data);
-          setConsultations([]);
-        }
-      } else {
-        console.error('Failed to fetch consultations:', response.status);
-        setConsultations([]);
-      }
+      console.log(`${endpoint}: ${response.status} ${response.statusText}`);
     } catch (error) {
-      console.error('Error fetching consultations:', error);
-      setError('Network error fetching consultations');
-      setConsultations([]);
+      console.log(`${endpoint}: ERROR - ${error.message}`);
     }
-  };
-
-   const fetchSpecialists = async () => {
-  try {
-    const token = localStorage.getItem('access_token');
-    console.log('Fetching specialists...');
-    
-    // Use the new specialists endpoint
-    const response = await fetch(`${API_BASE_URL}/api/auth/specialists/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    console.log('Specialists response:', response.status);
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Specialists data:', data);
-      
-      if (Array.isArray(data)) {
-        setSpecialists(data);
-      } else {
-        console.warn('Specialists data is not an array:', data);
-        setSpecialists([]);
-      }
-    } else {
-      console.error('Failed to fetch specialists:', response.status);
-      setSpecialists([]);
-    }
-  } catch (error) {
-    console.error('Error fetching specialists:', error);
-    setSpecialists([]);
   }
 };
 
+  // Fetch user's consultations - FIXED: Use correct endpoint
+  const fetchConsultations = async () => {
+  try {
+    const token = localStorage.getItem('access_token');
+    console.log('Fetching consultations...');
+    
+    // Try multiple possible endpoints
+    const endpoints = [
+      '/api/consultations/patient-consultations/',
+      '/api/consultations/my-consultations/', 
+      '/api/consultations/user-consultations/',
+      '/api/consultations/',
+      '/api/consultations/consultations/'
+    ];
+
+    let consultationsData = [];
+    let workingEndpoint = '';
+
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        console.log(`Trying ${endpoint}:`, response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`Success with ${endpoint}:`, data);
+          workingEndpoint = endpoint;
+          
+          // Handle different response formats
+          if (Array.isArray(data)) {
+            consultationsData = data;
+          } else if (data.results && Array.isArray(data.results)) {
+            consultationsData = data.results;
+          } else if (data.consultations && Array.isArray(data.consultations)) {
+            consultationsData = data.consultations;
+          } else {
+            consultationsData = [];
+          }
+          break;
+        }
+      } catch (error) {
+        console.log(`Endpoint ${endpoint} failed:`, error);
+        continue;
+      }
+    }
+
+    if (workingEndpoint) {
+      console.log(`Using endpoint: ${workingEndpoint}`);
+      setConsultations(consultationsData);
+    } else {
+      console.error('No working consultations endpoint found');
+      setError('Consultations feature is currently unavailable');
+      setConsultations([]);
+    }
+
+  } catch (error) {
+    console.error('Error fetching consultations:', error);
+    setError('Network error fetching consultations');
+    setConsultations([]);
+  }
+};
 
   // Fetch user's scans - FIXED: Use correct scans endpoint
   const fetchScans = async () => {
@@ -151,6 +170,7 @@ const ConsultationPage = () => {
 
   useEffect(() => {
     console.log('Component mounted, fetching data...');
+    testEndpoints();
     fetchConsultations();
     fetchSpecialists();
     fetchScans();
@@ -292,11 +312,27 @@ const ConsultationPage = () => {
       </Snackbar>
 
       {/* Debug Info */}
-      <Box sx={{ mb: 2, p: 1, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
-        <Typography variant="body2" color="textSecondary">
-          Loaded: {specialistsToDisplay.length} specialists, {scansToDisplay.length} scans, {consultationsToDisplay.length} consultations
-        </Typography>
-      </Box>
+      {/* Enhanced Debug Info */}
+<Box sx={{ mb: 2, p: 2, backgroundColor: '#f0f0f0', borderRadius: 1, border: '1px solid #ccc' }}>
+  <Typography variant="h6" gutterBottom>Debug Information</Typography>
+  <Typography variant="body2">
+    API Base: {API_BASE_URL}
+  </Typography>
+  <Typography variant="body2">
+    Endpoints: {specialistsToDisplay.length} specialists, {scansToDisplay.length} scans, {consultationsToDisplay.length} consultations
+  </Typography>
+  <Typography variant="body2">
+    Has Token: {localStorage.getItem('access_token') ? 'Yes' : 'No'}
+  </Typography>
+  <Button 
+    variant="outlined" 
+    size="small" 
+    onClick={testEndpoints}
+    sx={{ mt: 1 }}
+  >
+    Test All Endpoints
+  </Button>
+</Box>
 
       {/* Consultations List */}
       <Grid container spacing={3}>
