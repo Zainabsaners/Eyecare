@@ -14,9 +14,10 @@ import {
   DialogActions,
   Box,
   Alert,
-  Snackbar
+  Snackbar,
+  CircularProgress
 } from '@mui/material';
-import { Add, CalendarToday, Person, MedicalServices } from '@mui/icons-material';
+import { Add, CalendarToday, Person, MedicalServices, Refresh, Warning } from '@mui/icons-material';
 
 const ConsultationPage = () => {
   const [consultations, setConsultations] = useState([]);
@@ -30,132 +31,178 @@ const ConsultationPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [corsError, setCorsError] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
   // Backend API base URL
   const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
-  // Fetch user's consultations with CORS error handling
+  // Test backend connection
+  const testBackendConnection = async () => {
+    try {
+      console.log('Testing backend connection...');
+      const response = await fetch(`${API_BASE_URL}/api/consultations/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.log('Backend connection test failed:', error);
+      return false;
+    }
+  };
+
+  // Fetch user's consultations with CORS workaround
   const fetchConsultations = async () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('Fetching consultations...');
       
       const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        mode: 'cors', // Explicitly set CORS mode
       });
+
+      console.log('Consultations response status:', response.status);
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Consultations data received:', data);
-      
-      // Handle different response formats
-      if (Array.isArray(data)) {
-        setConsultations(data);
-      } else if (data.results && Array.isArray(data.results)) {
-        setConsultations(data.results);
-      } else if (data.consultations && Array.isArray(data.consultations)) {
-        setConsultations(data.consultations);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Consultations data received:', data);
+        
+        if (Array.isArray(data)) {
+          setConsultations(data);
+        } else if (data.results && Array.isArray(data.results)) {
+          setConsultations(data.results);
+        } else {
+          setConsultations([]);
+        }
+        setConnectionError(false);
       } else {
-        setConsultations([]);
+        throw new Error(`HTTP ${response.status}`);
       }
-      setCorsError(false);
-      
     } catch (error) {
       console.error('Error fetching consultations:', error);
-      if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
-        setCorsError(true);
-        setError('Connection error: Please check if the server is running and CORS is configured');
-      } else {
-        setError('Failed to load consultations');
-      }
+      setConnectionError(true);
+      setError('Cannot connect to server. Please check your backend CORS configuration.');
       setConsultations([]);
     }
   };
 
-  // Fetch specialists with CORS error handling
+  // Fetch specialists with CORS workaround
   const fetchSpecialists = async () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('Fetching specialists...');
       
       const response = await fetch(`${API_BASE_URL}/api/auth/specialists/`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        mode: 'cors',
       });
+
+      console.log('Specialists response status:', response.status);
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Specialists data:', data);
-      
-      if (Array.isArray(data)) {
-        setSpecialists(data);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Specialists data:', data);
+        
+        if (Array.isArray(data)) {
+          setSpecialists(data);
+        } else {
+          setSpecialists([]);
+        }
       } else {
-        setSpecialists([]);
+        throw new Error(`HTTP ${response.status}`);
       }
-      
     } catch (error) {
       console.error('Error fetching specialists:', error);
       setSpecialists([]);
     }
   };
 
-  // Fetch user's scans with CORS error handling
+  // Fetch user's scans with CORS workaround
   const fetchScans = async () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('Fetching scans...');
       
       const response = await fetch(`${API_BASE_URL}/api/scans/scans/`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        mode: 'cors',
       });
+
+      console.log('Scans response status:', response.status);
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Scans data:', data);
-      
-      if (Array.isArray(data)) {
-        setScans(data);
-      } else if (data.results && Array.isArray(data.results)) {
-        setScans(data.results);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Scans data:', data);
+        
+        if (Array.isArray(data)) {
+          setScans(data);
+        } else if (data.results && Array.isArray(data.results)) {
+          setScans(data.results);
+        } else {
+          setScans([]);
+        }
       } else {
-        setScans([]);
+        throw new Error(`HTTP ${response.status}`);
       }
-      
     } catch (error) {
       console.error('Error fetching scans:', error);
       setScans([]);
     }
   };
 
+  // Load all data
+  const loadAllData = async () => {
+    setFetching(true);
+    setConnectionError(false);
+    
+    // Test connection first
+    const isConnected = await testBackendConnection();
+    
+    if (!isConnected) {
+      setConnectionError(true);
+      setError('Backend server is not accessible. Please check CORS configuration.');
+      setFetching(false);
+      return;
+    }
+
+    try {
+      await Promise.all([
+        fetchConsultations(),
+        fetchSpecialists(),
+        fetchScans()
+      ]);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setConnectionError(true);
+    } finally {
+      setFetching(false);
+    }
+  };
+
   useEffect(() => {
     console.log('Component mounted, fetching data...');
-    fetchConsultations();
-    fetchSpecialists();
-    fetchScans();
+    loadAllData();
   }, []);
 
   const handleRequestConsultation = async () => {
+    if (connectionError) {
+      setError('Cannot submit consultation - server connection issue');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -188,6 +235,8 @@ const ConsultationPage = () => {
         scheduled_date: scheduledDate || null,
       };
 
+      console.log('Sending consultation data:', consultationData);
+
       const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         method: 'POST',
         headers: {
@@ -195,30 +244,31 @@ const ConsultationPage = () => {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(consultationData),
-        mode: 'cors',
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      console.log('Consultation creation response:', response.status);
 
-      const data = await response.json();
-      
-      // Add the new consultation to the list
-      setConsultations(prev => Array.isArray(prev) ? [data, ...prev] : [data]);
-      setOpenDialog(false);
-      resetForm();
-      
-      // Show success message
-      setSuccessMessage('Consultation request submitted successfully! Our specialist will review your request soon.');
-      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Successfully created consultation:', data);
+        
+        // Add the new consultation to the list
+        setConsultations(prev => Array.isArray(prev) ? [data, ...prev] : [data]);
+        setOpenDialog(false);
+        resetForm();
+        
+        // Show success message
+        setSuccessMessage('Consultation request submitted successfully! Our specialist will review your request soon.');
+        
+      } else {
+        const errorData = await response.json();
+        console.error('Server error:', errorData);
+        setError(errorData.detail || errorData.error || 'Failed to submit consultation request');
+      }
     } catch (error) {
       console.error('Network error:', error);
-      if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
-        setError('Connection error: Please check if the server is running and CORS is configured');
-      } else {
-        setError('Network error. Please check your connection and try again.');
-      }
+      setError('Network error. Please check your connection and try again.');
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -262,24 +312,44 @@ const ConsultationPage = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           My Consultations
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => setOpenDialog(true)}
-          disabled={corsError}
-        >
-          Request Consultation
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={loadAllData}
+            disabled={fetching}
+          >
+            {fetching ? <CircularProgress size={20} /> : 'Refresh'}
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => setOpenDialog(true)}
+            disabled={connectionError}
+          >
+            Request Consultation
+          </Button>
+        </Box>
       </Box>
 
-      {corsError && (
+      {connectionError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          CORS Error: Backend server is not allowing requests from this domain. 
-          Please check your backend CORS configuration or try again later.
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Warning />
+            <Box>
+              <Typography variant="body1" fontWeight="bold">
+                Server Connection Error
+              </Typography>
+              <Typography variant="body2">
+                Cannot connect to the backend server. This is usually due to CORS configuration.
+                Please check your Django backend settings and make sure CORS is properly configured.
+              </Typography>
+            </Box>
+          </Box>
         </Alert>
       )}
 
-      {error && !corsError && (
+      {error && !connectionError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
           {error}
         </Alert>
@@ -297,69 +367,70 @@ const ConsultationPage = () => {
         </Alert>
       </Snackbar>
 
+      {/* Loading State */}
+      {fetching && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <CircularProgress size={40} />
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Loading consultations...
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
       {/* Connection Status */}
-      <Box sx={{ mb: 2, p: 2, backgroundColor: corsError ? '#ffebee' : '#e8f5e8', borderRadius: 1 }}>
-        <Typography variant="body2" color={corsError ? 'error' : 'success.main'}>
-          {corsError 
-            ? '❌ Connection Issue: Cannot reach backend server' 
-            : '✅ Connection: Backend server is accessible'
-          }
-        </Typography>
-        {corsError && (
-          <Button 
-            variant="outlined" 
-            size="small" 
-            onClick={() => {
-              setCorsError(false);
-              fetchConsultations();
-              fetchSpecialists();
-              fetchScans();
-            }}
-            sx={{ mt: 1 }}
-          >
-            Retry Connection
-          </Button>
-        )}
-      </Box>
+      {!fetching && (
+        <Box sx={{ mb: 2, p: 2, backgroundColor: connectionError ? '#ffebee' : '#e8f5e8', borderRadius: 1 }}>
+          <Typography variant="body2" color={connectionError ? 'error' : 'success.main'}>
+            {connectionError 
+              ? '❌ Cannot connect to backend server - CORS issue' 
+              : `✅ Server connected - ${consultationsToDisplay.length} consultations, ${specialistsToDisplay.length} specialists, ${scansToDisplay.length} scans loaded`
+            }
+          </Typography>
+        </Box>
+      )}
 
       {/* Consultations List */}
-      <Grid container spacing={3}>
-        {consultationsToDisplay.map((consultation) => (
-          <Grid key={`consultation-${consultation.id}`} item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Consultation with {consultation.specialist_name || 'Specialist'}
-                </Typography>
-                <Typography color="textSecondary" gutterBottom>
-                  Status: <span style={{ 
-                    color: getStatusColor(consultation.status),
-                    fontWeight: 'bold'
-                  }}>
-                    {consultation.status || 'pending'}
-                  </span>
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  Description: {consultation.description}
-                </Typography>
-                {consultation.scheduled_date && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                    <CalendarToday sx={{ mr: 1, fontSize: 16 }} />
-                    <Typography variant="body2">
-                      Scheduled: {new Date(consultation.scheduled_date).toLocaleDateString()}
-                    </Typography>
-                  </Box>
-                )}
-                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                  Created: {new Date(consultation.created_at).toLocaleDateString()}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      {!fetching && !connectionError && (
+        <Grid container spacing={3}>
+          {consultationsToDisplay.map((consultation) => (
+            <Grid key={`consultation-${consultation.id}`} item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Consultation with {consultation.specialist_name || 'Specialist'}
+                  </Typography>
+                  <Typography color="textSecondary" gutterBottom>
+                    Status: <span style={{ 
+                      color: getStatusColor(consultation.status),
+                      fontWeight: 'bold'
+                    }}>
+                      {consultation.status || 'pending'}
+                    </span>
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    Description: {consultation.description}
+                  </Typography>
+                  {consultation.scheduled_date && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                      <CalendarToday sx={{ mr: 1, fontSize: 16 }} />
+                      <Typography variant="body2">
+                        Scheduled: {new Date(consultation.scheduled_date).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  )}
+                  <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                    Created: {new Date(consultation.created_at).toLocaleDateString()}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
-      {consultationsToDisplay.length === 0 && !corsError && (
+      {!fetching && !connectionError && consultationsToDisplay.length === 0 && (
         <Card sx={{ textAlign: 'center', py: 4 }}>
           <CardContent>
             <MedicalServices sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
@@ -380,16 +451,25 @@ const ConsultationPage = () => {
         </Card>
       )}
 
-      {corsError && (
+      {connectionError && !fetching && (
         <Card sx={{ textAlign: 'center', py: 4 }}>
           <CardContent>
-            <MedicalServices sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-            <Typography variant="h6" color="textSecondary">
-              Connection Issue
+            <Warning sx={{ fontSize: 48, color: 'error.main', mb: 2 }} />
+            <Typography variant="h6" color="error.main">
+              Backend Connection Required
             </Typography>
             <Typography variant="body2" color="textSecondary" sx={{ mt: 1, mb: 3 }}>
-              Unable to connect to the server. Please check your backend CORS configuration.
+              Please configure CORS in your Django backend to allow requests from:
+              <br />
+              <strong>https://eyecare-pi.vercel.app</strong>
             </Typography>
+            <Button
+              variant="contained"
+              startIcon={<Refresh />}
+              onClick={loadAllData}
+            >
+              Retry Connection
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -418,7 +498,7 @@ const ConsultationPage = () => {
                 required
                 error={!selectedSpecialist}
                 helperText={!selectedSpecialist ? "Please select a specialist" : ""}
-                disabled={corsError}
+                disabled={connectionError}
               >
                 <MenuItem value="">
                   <em>Choose a specialist...</em>
@@ -449,7 +529,7 @@ const ConsultationPage = () => {
                 required
                 error={!selectedScan}
                 helperText={!selectedScan ? "Please select a scan" : ""}
-                disabled={corsError}
+                disabled={connectionError}
               >
                 <MenuItem value="">
                   <em>Choose a scan...</em>
@@ -477,7 +557,7 @@ const ConsultationPage = () => {
                 InputLabelProps={{
                   shrink: true,
                 }}
-                disabled={corsError}
+                disabled={connectionError}
               />
             </Grid>
 
@@ -497,7 +577,7 @@ const ConsultationPage = () => {
                 required
                 error={!description.trim()}
                 helperText={!description.trim() ? "Please describe your concerns" : "Be specific about your symptoms and questions"}
-                disabled={corsError}
+                disabled={connectionError}
               />
             </Grid>
           </Grid>
@@ -509,8 +589,8 @@ const ConsultationPage = () => {
           <Button 
             onClick={handleRequestConsultation} 
             variant="contained"
-            disabled={loading || !selectedSpecialist || !selectedScan || !description.trim() || corsError}
-            startIcon={loading ? null : <Add />}
+            disabled={loading || !selectedSpecialist || !selectedScan || !description.trim() || connectionError}
+            startIcon={loading ? <CircularProgress size={16} /> : <Add />}
           >
             {loading ? 'Submitting...' : 'Request Consultation'}
           </Button>
