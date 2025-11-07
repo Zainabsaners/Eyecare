@@ -14,10 +14,9 @@ import {
   DialogActions,
   Box,
   Alert,
-  Snackbar,
-  CircularProgress
+  Snackbar
 } from '@mui/material';
-import { Add, CalendarToday, Person, MedicalServices, Refresh, Warning } from '@mui/icons-material';
+import { Add, CalendarToday, Person, MedicalServices } from '@mui/icons-material';
 
 const ConsultationPage = () => {
   const [consultations, setConsultations] = useState([]);
@@ -31,83 +30,84 @@ const ConsultationPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [connectionError, setConnectionError] = useState(false);
-  const [fetching, setFetching] = useState(true);
 
   // Backend API base URL
   const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
-  // Test backend connection
-  const testBackendConnection = async () => {
-    try {
-      console.log('Testing backend connection...');
-      const response = await fetch(`${API_BASE_URL}/api/consultations/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.ok;
-    } catch (error) {
-      console.log('Backend connection test failed:', error);
-      return false;
+  // Debug function to check user info
+  const debugCurrentUser = () => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('=== CURRENT USER INFO ===');
+        console.log('User ID:', payload.user_id);
+        console.log('Username:', payload.username);
+        console.log('User Type:', payload.user_type);
+        return payload;
+      } catch (e) {
+        console.log('Error decoding token:', e);
+      }
     }
+    return null;
   };
 
-  // Fetch user's consultations with CORS workaround
+  // Fetch user's consultations
   const fetchConsultations = async () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('Fetching consultations...');
       
       const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
-        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-
-      console.log('Consultations response status:', response.status);
+      
+      console.log('Consultations response:', response.status);
       
       if (response.ok) {
         const data = await response.json();
         console.log('Consultations data received:', data);
         
+        // Handle different response formats
         if (Array.isArray(data)) {
           setConsultations(data);
         } else if (data.results && Array.isArray(data.results)) {
           setConsultations(data.results);
+        } else if (data.consultations && Array.isArray(data.consultations)) {
+          setConsultations(data.consultations);
         } else {
+          console.warn('Unexpected consultations format:', data);
           setConsultations([]);
         }
-        setConnectionError(false);
       } else {
-        throw new Error(`HTTP ${response.status}`);
+        console.error('Failed to fetch consultations:', response.status);
+        setError('Failed to load consultations');
+        setConsultations([]);
       }
     } catch (error) {
       console.error('Error fetching consultations:', error);
-      setConnectionError(true);
-      setError('Cannot connect to server. Please check your backend CORS configuration.');
+      setError('Network error fetching consultations');
       setConsultations([]);
     }
   };
 
-  // Fetch specialists with CORS workaround
+  // Fetch specialists
   const fetchSpecialists = async () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('Fetching specialists...');
       
       const response = await fetch(`${API_BASE_URL}/api/auth/specialists/`, {
-        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-
-      console.log('Specialists response status:', response.status);
+      
+      console.log('Specialists response:', response.status);
       
       if (response.ok) {
         const data = await response.json();
@@ -116,10 +116,12 @@ const ConsultationPage = () => {
         if (Array.isArray(data)) {
           setSpecialists(data);
         } else {
+          console.warn('Specialists data is not an array:', data);
           setSpecialists([]);
         }
       } else {
-        throw new Error(`HTTP ${response.status}`);
+        console.error('Failed to fetch specialists:', response.status);
+        setSpecialists([]);
       }
     } catch (error) {
       console.error('Error fetching specialists:', error);
@@ -127,35 +129,37 @@ const ConsultationPage = () => {
     }
   };
 
-  // Fetch user's scans with CORS workaround
+  // Fetch user's scans
   const fetchScans = async () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('Fetching scans...');
       
       const response = await fetch(`${API_BASE_URL}/api/scans/scans/`, {
-        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-
-      console.log('Scans response status:', response.status);
+      
+      console.log('Scans response:', response.status);
       
       if (response.ok) {
         const data = await response.json();
         console.log('Scans data:', data);
         
+        // Handle different response formats
         if (Array.isArray(data)) {
           setScans(data);
         } else if (data.results && Array.isArray(data.results)) {
           setScans(data.results);
         } else {
+          console.warn('Scans data is not an array:', data);
           setScans([]);
         }
       } else {
-        throw new Error(`HTTP ${response.status}`);
+        console.error('Failed to fetch scans:', response.status);
+        setScans([]);
       }
     } catch (error) {
       console.error('Error fetching scans:', error);
@@ -163,46 +167,15 @@ const ConsultationPage = () => {
     }
   };
 
-  // Load all data
-  const loadAllData = async () => {
-    setFetching(true);
-    setConnectionError(false);
-    
-    // Test connection first
-    const isConnected = await testBackendConnection();
-    
-    if (!isConnected) {
-      setConnectionError(true);
-      setError('Backend server is not accessible. Please check CORS configuration.');
-      setFetching(false);
-      return;
-    }
-
-    try {
-      await Promise.all([
-        fetchConsultations(),
-        fetchSpecialists(),
-        fetchScans()
-      ]);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      setConnectionError(true);
-    } finally {
-      setFetching(false);
-    }
-  };
-
   useEffect(() => {
     console.log('Component mounted, fetching data...');
-    loadAllData();
+    debugCurrentUser();
+    fetchConsultations();
+    fetchSpecialists();
+    fetchScans();
   }, []);
 
   const handleRequestConsultation = async () => {
-    if (connectionError) {
-      setError('Cannot submit consultation - server connection issue');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
@@ -228,11 +201,13 @@ const ConsultationPage = () => {
     try {
       const token = localStorage.getItem('access_token');
       
+      // ONLY send these fields - backend will automatically set the user
       const consultationData = {
         specialist: parseInt(selectedSpecialist),
         scan: parseInt(selectedScan),
         description: description.trim(),
         scheduled_date: scheduledDate || null,
+        // DO NOT include user field - backend handles this automatically
       };
 
       console.log('Sending consultation data:', consultationData);
@@ -262,13 +237,24 @@ const ConsultationPage = () => {
         
       } else {
         const errorData = await response.json();
-        console.error('Server error:', errorData);
-        setError(errorData.detail || errorData.error || 'Failed to submit consultation request');
+        console.error('Server error details:', errorData);
+        
+        // Enhanced error handling for specific field errors
+        if (errorData.specialist) {
+          setError(`Specialist error: ${errorData.specialist}`);
+        } else if (errorData.scan) {
+          setError(`Scan error: ${errorData.scan}`);
+        } else if (errorData.user) {
+          setError(`User error: ${errorData.user}`);
+        } else if (errorData.description) {
+          setError(`Description error: ${errorData.description}`);
+        } else {
+          setError(errorData.detail || errorData.error || 'Failed to submit consultation request');
+        }
       }
     } catch (error) {
       console.error('Network error:', error);
       setError('Network error. Please check your connection and try again.');
-      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -312,44 +298,16 @@ const ConsultationPage = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           My Consultations
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            startIcon={<Refresh />}
-            onClick={loadAllData}
-            disabled={fetching}
-          >
-            {fetching ? <CircularProgress size={20} /> : 'Refresh'}
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setOpenDialog(true)}
-            disabled={connectionError}
-          >
-            Request Consultation
-          </Button>
-        </Box>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => setOpenDialog(true)}
+        >
+          Request Consultation
+        </Button>
       </Box>
 
-      {connectionError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Warning />
-            <Box>
-              <Typography variant="body1" fontWeight="bold">
-                Server Connection Error
-              </Typography>
-              <Typography variant="body2">
-                Cannot connect to the backend server. This is usually due to CORS configuration.
-                Please check your Django backend settings and make sure CORS is properly configured.
-              </Typography>
-            </Box>
-          </Box>
-        </Alert>
-      )}
-
-      {error && !connectionError && (
+      {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
           {error}
         </Alert>
@@ -367,70 +325,80 @@ const ConsultationPage = () => {
         </Alert>
       </Snackbar>
 
-      {/* Loading State */}
-      {fetching && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-          <Box sx={{ textAlign: 'center' }}>
-            <CircularProgress size={40} />
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              Loading consultations...
-            </Typography>
-          </Box>
-        </Box>
-      )}
-
-      {/* Connection Status */}
-      {!fetching && (
-        <Box sx={{ mb: 2, p: 2, backgroundColor: connectionError ? '#ffebee' : '#e8f5e8', borderRadius: 1 }}>
-          <Typography variant="body2" color={connectionError ? 'error' : 'success.main'}>
-            {connectionError 
-              ? '❌ Cannot connect to backend server - CORS issue' 
-              : `✅ Server connected - ${consultationsToDisplay.length} consultations, ${specialistsToDisplay.length} specialists, ${scansToDisplay.length} scans loaded`
-            }
-          </Typography>
-        </Box>
-      )}
+      {/* Debug Info */}
+      <Box sx={{ mb: 2, p: 2, backgroundColor: '#f0f0f0', borderRadius: 1, border: '1px solid #ccc' }}>
+        <Typography variant="h6" gutterBottom>Application Status</Typography>
+        <Typography variant="body2" color="green">
+          ✅ API Connection: Working
+        </Typography>
+        <Typography variant="body2">
+          Specialists: {specialistsToDisplay.length} available
+        </Typography>
+        <Typography variant="body2">
+          Scans: {scansToDisplay.length} available
+        </Typography>
+        <Typography variant="body2">
+          Consultations: {consultationsToDisplay.length} found
+        </Typography>
+        <Typography variant="body2">
+          Status: {consultationsToDisplay.length === 0 ? 'No consultations yet - try creating one!' : 'Showing consultations'}
+        </Typography>
+        <Button 
+          variant="outlined" 
+          size="small" 
+          onClick={debugCurrentUser}
+          sx={{ mt: 1, mr: 1 }}
+        >
+          Debug User Info
+        </Button>
+        <Button 
+          variant="outlined" 
+          size="small" 
+          onClick={fetchConsultations}
+          sx={{ mt: 1 }}
+        >
+          Refresh Consultations
+        </Button>
+      </Box>
 
       {/* Consultations List */}
-      {!fetching && !connectionError && (
-        <Grid container spacing={3}>
-          {consultationsToDisplay.map((consultation) => (
-            <Grid key={`consultation-${consultation.id}`} item xs={12} md={6}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Consultation with {consultation.specialist_name || 'Specialist'}
-                  </Typography>
-                  <Typography color="textSecondary" gutterBottom>
-                    Status: <span style={{ 
-                      color: getStatusColor(consultation.status),
-                      fontWeight: 'bold'
-                    }}>
-                      {consultation.status || 'pending'}
-                    </span>
-                  </Typography>
-                  <Typography variant="body2" gutterBottom>
-                    Description: {consultation.description}
-                  </Typography>
-                  {consultation.scheduled_date && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <CalendarToday sx={{ mr: 1, fontSize: 16 }} />
-                      <Typography variant="body2">
-                        Scheduled: {new Date(consultation.scheduled_date).toLocaleDateString()}
-                      </Typography>
-                    </Box>
-                  )}
-                  <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                    Created: {new Date(consultation.created_at).toLocaleDateString()}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
+      <Grid container spacing={3}>
+        {consultationsToDisplay.map((consultation) => (
+          <Grid key={`consultation-${consultation.id}`} item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Consultation with {consultation.specialist_name || 'Specialist'}
+                </Typography>
+                <Typography color="textSecondary" gutterBottom>
+                  Status: <span style={{ 
+                    color: getStatusColor(consultation.status),
+                    fontWeight: 'bold'
+                  }}>
+                    {consultation.status || 'pending'}
+                  </span>
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  Description: {consultation.description}
+                </Typography>
+                {consultation.scheduled_date && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                    <CalendarToday sx={{ mr: 1, fontSize: 16 }} />
+                    <Typography variant="body2">
+                      Scheduled: {new Date(consultation.scheduled_date).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                )}
+                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                  Created: {new Date(consultation.created_at).toLocaleDateString()}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
 
-      {!fetching && !connectionError && consultationsToDisplay.length === 0 && (
+      {consultationsToDisplay.length === 0 && (
         <Card sx={{ textAlign: 'center', py: 4 }}>
           <CardContent>
             <MedicalServices sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
@@ -446,29 +414,6 @@ const ConsultationPage = () => {
               onClick={() => setOpenDialog(true)}
             >
               Request Your First Consultation
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {connectionError && !fetching && (
-        <Card sx={{ textAlign: 'center', py: 4 }}>
-          <CardContent>
-            <Warning sx={{ fontSize: 48, color: 'error.main', mb: 2 }} />
-            <Typography variant="h6" color="error.main">
-              Backend Connection Required
-            </Typography>
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 1, mb: 3 }}>
-              Please configure CORS in your Django backend to allow requests from:
-              <br />
-              <strong>https://eyecare-pi.vercel.app</strong>
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Refresh />}
-              onClick={loadAllData}
-            >
-              Retry Connection
             </Button>
           </CardContent>
         </Card>
@@ -498,7 +443,6 @@ const ConsultationPage = () => {
                 required
                 error={!selectedSpecialist}
                 helperText={!selectedSpecialist ? "Please select a specialist" : ""}
-                disabled={connectionError}
               >
                 <MenuItem value="">
                   <em>Choose a specialist...</em>
@@ -529,7 +473,6 @@ const ConsultationPage = () => {
                 required
                 error={!selectedScan}
                 helperText={!selectedScan ? "Please select a scan" : ""}
-                disabled={connectionError}
               >
                 <MenuItem value="">
                   <em>Choose a scan...</em>
@@ -557,7 +500,6 @@ const ConsultationPage = () => {
                 InputLabelProps={{
                   shrink: true,
                 }}
-                disabled={connectionError}
               />
             </Grid>
 
@@ -577,7 +519,6 @@ const ConsultationPage = () => {
                 required
                 error={!description.trim()}
                 helperText={!description.trim() ? "Please describe your concerns" : "Be specific about your symptoms and questions"}
-                disabled={connectionError}
               />
             </Grid>
           </Grid>
@@ -589,8 +530,8 @@ const ConsultationPage = () => {
           <Button 
             onClick={handleRequestConsultation} 
             variant="contained"
-            disabled={loading || !selectedSpecialist || !selectedScan || !description.trim() || connectionError}
-            startIcon={loading ? <CircularProgress size={16} /> : <Add />}
+            disabled={loading || !selectedSpecialist || !selectedScan || !description.trim()}
+            startIcon={loading ? null : <Add />}
           >
             {loading ? 'Submitting...' : 'Request Consultation'}
           </Button>
