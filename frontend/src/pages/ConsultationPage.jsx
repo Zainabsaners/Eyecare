@@ -34,30 +34,10 @@ const ConsultationPage = () => {
   // Backend API base URL
   const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
-  // Debug function to check user info
-  const debugCurrentUser = () => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('=== CURRENT USER INFO ===');
-        console.log('User ID:', payload.user_id);
-        console.log('Username:', payload.username);
-        console.log('User Type:', payload.user_type);
-        return payload;
-      } catch (e) {
-        console.log('Error decoding token:', e);
-      }
-    }
-    return null;
-  };
-
   // Fetch user's consultations
   const fetchConsultations = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      console.log('Fetching consultations...');
-      
       const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -65,11 +45,8 @@ const ConsultationPage = () => {
         },
       });
       
-      console.log('Consultations response:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Consultations data received:', data);
         
         // Handle different response formats
         if (Array.isArray(data)) {
@@ -79,16 +56,13 @@ const ConsultationPage = () => {
         } else if (data.consultations && Array.isArray(data.consultations)) {
           setConsultations(data.consultations);
         } else {
-          console.warn('Unexpected consultations format:', data);
           setConsultations([]);
         }
       } else {
-        console.error('Failed to fetch consultations:', response.status);
         setError('Failed to load consultations');
         setConsultations([]);
       }
     } catch (error) {
-      console.error('Error fetching consultations:', error);
       setError('Network error fetching consultations');
       setConsultations([]);
     }
@@ -98,8 +72,6 @@ const ConsultationPage = () => {
   const fetchSpecialists = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      console.log('Fetching specialists...');
-      
       const response = await fetch(`${API_BASE_URL}/api/auth/specialists/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -107,24 +79,17 @@ const ConsultationPage = () => {
         },
       });
       
-      console.log('Specialists response:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Specialists data:', data);
-        
         if (Array.isArray(data)) {
           setSpecialists(data);
         } else {
-          console.warn('Specialists data is not an array:', data);
           setSpecialists([]);
         }
       } else {
-        console.error('Failed to fetch specialists:', response.status);
         setSpecialists([]);
       }
     } catch (error) {
-      console.error('Error fetching specialists:', error);
       setSpecialists([]);
     }
   };
@@ -133,8 +98,6 @@ const ConsultationPage = () => {
   const fetchScans = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      console.log('Fetching scans...');
-      
       const response = await fetch(`${API_BASE_URL}/api/scans/scans/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -142,34 +105,24 @@ const ConsultationPage = () => {
         },
       });
       
-      console.log('Scans response:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Scans data:', data);
-        
-        // Handle different response formats
         if (Array.isArray(data)) {
           setScans(data);
         } else if (data.results && Array.isArray(data.results)) {
           setScans(data.results);
         } else {
-          console.warn('Scans data is not an array:', data);
           setScans([]);
         }
       } else {
-        console.error('Failed to fetch scans:', response.status);
         setScans([]);
       }
     } catch (error) {
-      console.error('Error fetching scans:', error);
       setScans([]);
     }
   };
 
   useEffect(() => {
-    console.log('Component mounted, fetching data...');
-    debugCurrentUser();
     fetchConsultations();
     fetchSpecialists();
     fetchScans();
@@ -201,16 +154,13 @@ const ConsultationPage = () => {
     try {
       const token = localStorage.getItem('access_token');
       
-      // ONLY send these fields - backend will automatically set the user
+      // Backend automatically sets the user field
       const consultationData = {
         specialist: parseInt(selectedSpecialist),
         scan: parseInt(selectedScan),
         description: description.trim(),
         scheduled_date: scheduledDate || null,
-        // DO NOT include user field - backend handles this automatically
       };
-
-      console.log('Sending consultation data:', consultationData);
 
       const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         method: 'POST',
@@ -221,11 +171,8 @@ const ConsultationPage = () => {
         body: JSON.stringify(consultationData),
       });
 
-      console.log('Consultation creation response:', response.status);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('Successfully created consultation:', data);
         
         // Add the new consultation to the list
         setConsultations(prev => Array.isArray(prev) ? [data, ...prev] : [data]);
@@ -237,23 +184,9 @@ const ConsultationPage = () => {
         
       } else {
         const errorData = await response.json();
-        console.error('Server error details:', errorData);
-        
-        // Enhanced error handling for specific field errors
-        if (errorData.specialist) {
-          setError(`Specialist error: ${errorData.specialist}`);
-        } else if (errorData.scan) {
-          setError(`Scan error: ${errorData.scan}`);
-        } else if (errorData.user) {
-          setError(`User error: ${errorData.user}`);
-        } else if (errorData.description) {
-          setError(`Description error: ${errorData.description}`);
-        } else {
-          setError(errorData.detail || errorData.error || 'Failed to submit consultation request');
-        }
+        setError(errorData.detail || errorData.error || 'Failed to submit consultation request');
       }
     } catch (error) {
-      console.error('Network error:', error);
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
@@ -324,42 +257,6 @@ const ConsultationPage = () => {
           {successMessage}
         </Alert>
       </Snackbar>
-
-      {/* Debug Info */}
-      <Box sx={{ mb: 2, p: 2, backgroundColor: '#f0f0f0', borderRadius: 1, border: '1px solid #ccc' }}>
-        <Typography variant="h6" gutterBottom>Application Status</Typography>
-        <Typography variant="body2" color="green">
-          ✅ API Connection: Working
-        </Typography>
-        <Typography variant="body2">
-          Specialists: {specialistsToDisplay.length} available
-        </Typography>
-        <Typography variant="body2">
-          Scans: {scansToDisplay.length} available
-        </Typography>
-        <Typography variant="body2">
-          Consultations: {consultationsToDisplay.length} found
-        </Typography>
-        <Typography variant="body2">
-          Status: {consultationsToDisplay.length === 0 ? 'No consultations yet - try creating one!' : 'Showing consultations'}
-        </Typography>
-        <Button 
-          variant="outlined" 
-          size="small" 
-          onClick={debugCurrentUser}
-          sx={{ mt: 1, mr: 1 }}
-        >
-          Debug User Info
-        </Button>
-        <Button 
-          variant="outlined" 
-          size="small" 
-          onClick={fetchConsultations}
-          sx={{ mt: 1 }}
-        >
-          Refresh Consultations
-        </Button>
-      </Box>
 
       {/* Consultations List */}
       <Grid container spacing={3}>
