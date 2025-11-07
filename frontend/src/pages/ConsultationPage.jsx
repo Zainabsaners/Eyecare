@@ -30,99 +30,126 @@ const ConsultationPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [corsError, setCorsError] = useState(false);
 
   // Backend API base URL
   const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
-  // Fetch user's consultations
+  // Fetch user's consultations with CORS error handling
   const fetchConsultations = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      console.log('Fetching consultations...');
+      
       const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        mode: 'cors', // Explicitly set CORS mode
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Handle different response formats
-        if (Array.isArray(data)) {
-          setConsultations(data);
-        } else if (data.results && Array.isArray(data.results)) {
-          setConsultations(data.results);
-        } else if (data.consultations && Array.isArray(data.consultations)) {
-          setConsultations(data.consultations);
-        } else {
-          setConsultations([]);
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Consultations data received:', data);
+      
+      // Handle different response formats
+      if (Array.isArray(data)) {
+        setConsultations(data);
+      } else if (data.results && Array.isArray(data.results)) {
+        setConsultations(data.results);
+      } else if (data.consultations && Array.isArray(data.consultations)) {
+        setConsultations(data.consultations);
       } else {
-        setError('Failed to load consultations');
         setConsultations([]);
       }
+      setCorsError(false);
+      
     } catch (error) {
-      setError('Network error fetching consultations');
+      console.error('Error fetching consultations:', error);
+      if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+        setCorsError(true);
+        setError('Connection error: Please check if the server is running and CORS is configured');
+      } else {
+        setError('Failed to load consultations');
+      }
       setConsultations([]);
     }
   };
 
-  // Fetch specialists
+  // Fetch specialists with CORS error handling
   const fetchSpecialists = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      console.log('Fetching specialists...');
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/specialists/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        mode: 'cors',
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setSpecialists(data);
-        } else {
-          setSpecialists([]);
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Specialists data:', data);
+      
+      if (Array.isArray(data)) {
+        setSpecialists(data);
       } else {
         setSpecialists([]);
       }
+      
     } catch (error) {
+      console.error('Error fetching specialists:', error);
       setSpecialists([]);
     }
   };
 
-  // Fetch user's scans
+  // Fetch user's scans with CORS error handling
   const fetchScans = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      console.log('Fetching scans...');
+      
       const response = await fetch(`${API_BASE_URL}/api/scans/scans/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        mode: 'cors',
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setScans(data);
-        } else if (data.results && Array.isArray(data.results)) {
-          setScans(data.results);
-        } else {
-          setScans([]);
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Scans data:', data);
+      
+      if (Array.isArray(data)) {
+        setScans(data);
+      } else if (data.results && Array.isArray(data.results)) {
+        setScans(data.results);
       } else {
         setScans([]);
       }
+      
     } catch (error) {
+      console.error('Error fetching scans:', error);
       setScans([]);
     }
   };
 
   useEffect(() => {
+    console.log('Component mounted, fetching data...');
     fetchConsultations();
     fetchSpecialists();
     fetchScans();
@@ -154,7 +181,6 @@ const ConsultationPage = () => {
     try {
       const token = localStorage.getItem('access_token');
       
-      // Backend automatically sets the user field
       const consultationData = {
         specialist: parseInt(selectedSpecialist),
         scan: parseInt(selectedScan),
@@ -169,25 +195,30 @@ const ConsultationPage = () => {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(consultationData),
+        mode: 'cors',
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Add the new consultation to the list
-        setConsultations(prev => Array.isArray(prev) ? [data, ...prev] : [data]);
-        setOpenDialog(false);
-        resetForm();
-        
-        // Show success message
-        setSuccessMessage('Consultation request submitted successfully! Our specialist will review your request soon.');
-        
-      } else {
-        const errorData = await response.json();
-        setError(errorData.detail || errorData.error || 'Failed to submit consultation request');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      
+      // Add the new consultation to the list
+      setConsultations(prev => Array.isArray(prev) ? [data, ...prev] : [data]);
+      setOpenDialog(false);
+      resetForm();
+      
+      // Show success message
+      setSuccessMessage('Consultation request submitted successfully! Our specialist will review your request soon.');
+      
     } catch (error) {
-      setError('Network error. Please check your connection and try again.');
+      console.error('Network error:', error);
+      if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+        setError('Connection error: Please check if the server is running and CORS is configured');
+      } else {
+        setError('Network error. Please check your connection and try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -235,12 +266,20 @@ const ConsultationPage = () => {
           variant="contained"
           startIcon={<Add />}
           onClick={() => setOpenDialog(true)}
+          disabled={corsError}
         >
           Request Consultation
         </Button>
       </Box>
 
-      {error && (
+      {corsError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          CORS Error: Backend server is not allowing requests from this domain. 
+          Please check your backend CORS configuration or try again later.
+        </Alert>
+      )}
+
+      {error && !corsError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
           {error}
         </Alert>
@@ -257,6 +296,31 @@ const ConsultationPage = () => {
           {successMessage}
         </Alert>
       </Snackbar>
+
+      {/* Connection Status */}
+      <Box sx={{ mb: 2, p: 2, backgroundColor: corsError ? '#ffebee' : '#e8f5e8', borderRadius: 1 }}>
+        <Typography variant="body2" color={corsError ? 'error' : 'success.main'}>
+          {corsError 
+            ? '❌ Connection Issue: Cannot reach backend server' 
+            : '✅ Connection: Backend server is accessible'
+          }
+        </Typography>
+        {corsError && (
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={() => {
+              setCorsError(false);
+              fetchConsultations();
+              fetchSpecialists();
+              fetchScans();
+            }}
+            sx={{ mt: 1 }}
+          >
+            Retry Connection
+          </Button>
+        )}
+      </Box>
 
       {/* Consultations List */}
       <Grid container spacing={3}>
@@ -295,7 +359,7 @@ const ConsultationPage = () => {
         ))}
       </Grid>
 
-      {consultationsToDisplay.length === 0 && (
+      {consultationsToDisplay.length === 0 && !corsError && (
         <Card sx={{ textAlign: 'center', py: 4 }}>
           <CardContent>
             <MedicalServices sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
@@ -312,6 +376,20 @@ const ConsultationPage = () => {
             >
               Request Your First Consultation
             </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {corsError && (
+        <Card sx={{ textAlign: 'center', py: 4 }}>
+          <CardContent>
+            <MedicalServices sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" color="textSecondary">
+              Connection Issue
+            </Typography>
+            <Typography variant="body2" color="textSecondary" sx={{ mt: 1, mb: 3 }}>
+              Unable to connect to the server. Please check your backend CORS configuration.
+            </Typography>
           </CardContent>
         </Card>
       )}
@@ -340,6 +418,7 @@ const ConsultationPage = () => {
                 required
                 error={!selectedSpecialist}
                 helperText={!selectedSpecialist ? "Please select a specialist" : ""}
+                disabled={corsError}
               >
                 <MenuItem value="">
                   <em>Choose a specialist...</em>
@@ -370,6 +449,7 @@ const ConsultationPage = () => {
                 required
                 error={!selectedScan}
                 helperText={!selectedScan ? "Please select a scan" : ""}
+                disabled={corsError}
               >
                 <MenuItem value="">
                   <em>Choose a scan...</em>
@@ -397,6 +477,7 @@ const ConsultationPage = () => {
                 InputLabelProps={{
                   shrink: true,
                 }}
+                disabled={corsError}
               />
             </Grid>
 
@@ -416,6 +497,7 @@ const ConsultationPage = () => {
                 required
                 error={!description.trim()}
                 helperText={!description.trim() ? "Please describe your concerns" : "Be specific about your symptoms and questions"}
+                disabled={corsError}
               />
             </Grid>
           </Grid>
@@ -427,7 +509,7 @@ const ConsultationPage = () => {
           <Button 
             onClick={handleRequestConsultation} 
             variant="contained"
-            disabled={loading || !selectedSpecialist || !selectedScan || !description.trim()}
+            disabled={loading || !selectedSpecialist || !selectedScan || !description.trim() || corsError}
             startIcon={loading ? null : <Add />}
           >
             {loading ? 'Submitting...' : 'Request Consultation'}
