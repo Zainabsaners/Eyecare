@@ -34,24 +34,6 @@ const ConsultationPage = () => {
   // Backend API base URL
   const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
-  // Debug function to check user info
-  const debugCurrentUser = () => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('=== CURRENT USER INFO ===');
-        console.log('User ID:', payload.user_id);
-        console.log('Username:', payload.username);
-        console.log('User Type:', payload.user_type);
-        return payload;
-      } catch (e) {
-        console.log('Error decoding token:', e);
-      }
-    }
-    return null;
-  };
-
   // Fetch user's consultations
   const fetchConsultations = async () => {
     try {
@@ -169,7 +151,6 @@ const ConsultationPage = () => {
 
   useEffect(() => {
     console.log('Component mounted, fetching data...');
-    debugCurrentUser();
     fetchConsultations();
     fetchSpecialists();
     fetchScans();
@@ -207,7 +188,6 @@ const ConsultationPage = () => {
         scan: parseInt(selectedScan),
         description: description.trim(),
         scheduled_date: scheduledDate || null,
-        // DO NOT include user field - backend handles this automatically
       };
 
       console.log('Sending consultation data:', consultationData);
@@ -324,42 +304,6 @@ const ConsultationPage = () => {
           {successMessage}
         </Alert>
       </Snackbar>
-
-      {/* Debug Info */}
-      <Box sx={{ mb: 2, p: 2, backgroundColor: '#f0f0f0', borderRadius: 1, border: '1px solid #ccc' }}>
-        <Typography variant="h6" gutterBottom>Application Status</Typography>
-        <Typography variant="body2" color="green">
-          ✅ API Connection: Working
-        </Typography>
-        <Typography variant="body2">
-          Specialists: {specialistsToDisplay.length} available
-        </Typography>
-        <Typography variant="body2">
-          Scans: {scansToDisplay.length} available
-        </Typography>
-        <Typography variant="body2">
-          Consultations: {consultationsToDisplay.length} found
-        </Typography>
-        <Typography variant="body2">
-          Status: {consultationsToDisplay.length === 0 ? 'No consultations yet - try creating one!' : 'Showing consultations'}
-        </Typography>
-        <Button 
-          variant="outlined" 
-          size="small" 
-          onClick={debugCurrentUser}
-          sx={{ mt: 1, mr: 1 }}
-        >
-          Debug User Info
-        </Button>
-        <Button 
-          variant="outlined" 
-          size="small" 
-          onClick={fetchConsultations}
-          sx={{ mt: 1 }}
-        >
-          Refresh Consultations
-        </Button>
-      </Box>
 
       {/* Consultations List */}
       <Grid container spacing={3}>
