@@ -13,7 +13,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Tabs,
   Tab
 } from '@mui/material';
@@ -33,24 +32,30 @@ const SpecialistConsultations = () => {
   const [error, setError] = useState('');
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [response, setResponse] = useState('');
   const [tabValue, setTabValue] = useState(0);
+
+  // Backend API base URL
+  const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
   // Fetch consultations for the logged-in specialist
   const fetchConsultations = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/consultations/', {
+      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
+      console.log('Specialist consultations response:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Specialist consultations data:', data);
         setConsultations(data);
       } else {
+        console.error('Failed to fetch consultations:', response.status);
         setError('Failed to fetch consultations');
       }
     } catch (error) {
@@ -68,7 +73,7 @@ const SpecialistConsultations = () => {
   const handleApprove = async (consultationId) => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`/api/consultations/${consultationId}/approve/`, {
+      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/${consultationId}/approve/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,7 +97,7 @@ const SpecialistConsultations = () => {
   const handleComplete = async (consultationId) => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`/api/consultations/${consultationId}/complete/`, {
+      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/${consultationId}/complete/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -116,7 +121,7 @@ const SpecialistConsultations = () => {
   const handleCancel = async (consultationId) => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`/api/consultations/${consultationId}/cancel/`, {
+      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/${consultationId}/cancel/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -228,7 +233,7 @@ const SpecialistConsultations = () => {
         {(tabValue === 0 ? pendingConsultations : 
           tabValue === 1 ? approvedConsultations : completedConsultations)
           .map((consultation) => (
-          <Grid key={consultation.id} size={{ xs: 12, md: 6 }}>
+          <Grid item xs={12} md={6} key={consultation.id}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
@@ -341,33 +346,33 @@ const SpecialistConsultations = () => {
           {selectedConsultation && (
             <Box sx={{ mt: 2 }}>
               <Grid container spacing={2}>
-                <Grid size={12}>
+                <Grid item xs={12}>
                   <Typography variant="subtitle2" color="textSecondary">Patient</Typography>
                   <Typography variant="body1">{selectedConsultation.user_name}</Typography>
                 </Grid>
-                <Grid size={12}>
+                <Grid item xs={12}>
                   <Typography variant="subtitle2" color="textSecondary">Scan Reference</Typography>
                   <Typography variant="body1">Scan #{selectedConsultation.scan}</Typography>
                 </Grid>
-                <Grid size={12}>
+                <Grid item xs={12}>
                   <Typography variant="subtitle2" color="textSecondary">Description</Typography>
                   <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                     {selectedConsultation.description}
                   </Typography>
                 </Grid>
                 {selectedConsultation.scheduled_date && (
-                  <Grid size={12}>
+                  <Grid item xs={12}>
                     <Typography variant="subtitle2" color="textSecondary">Preferred Date</Typography>
                     <Typography variant="body1">
                       {new Date(selectedConsultation.scheduled_date).toLocaleDateString()}
                     </Typography>
                   </Grid>
                 )}
-                <Grid size={12}>
+                <Grid item xs={12}>
                   <Typography variant="subtitle2" color="textSecondary">Status</Typography>
                   {getStatusChip(selectedConsultation.status)}
                 </Grid>
-                <Grid size={12}>
+                <Grid item xs={12}>
                   <Typography variant="subtitle2" color="textSecondary">Requested On</Typography>
                   <Typography variant="body1">
                     {new Date(selectedConsultation.created_at).toLocaleString()}

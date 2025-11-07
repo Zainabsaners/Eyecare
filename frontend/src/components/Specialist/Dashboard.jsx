@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 
 const SpecialistDashboard = () => {
   const { user } = useAuth();
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Backend API base URL
+  const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
   useEffect(() => {
     fetchConsultations();
@@ -16,16 +18,20 @@ const SpecialistDashboard = () => {
   const fetchConsultations = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/consultations/', {
+      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
+      console.log('Dashboard consultations response:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Dashboard consultations data:', data);
         setConsultations(data);
       } else {
+        console.error('Failed to fetch consultations:', response.status);
         setError('Failed to fetch consultations');
       }
     } catch (error) {
