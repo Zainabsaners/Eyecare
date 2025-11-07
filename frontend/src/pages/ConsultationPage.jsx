@@ -34,13 +34,13 @@ const ConsultationPage = () => {
   // Backend API base URL
   const API_BASE_URL = 'https://eyecare-utjw.onrender.com';
 
-  // Fetch user's consultations
+  // Fetch user's consultations - USING CONFIRMED WORKING ENDPOINT
   const fetchConsultations = async () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('Fetching consultations...');
       
-      const response = await fetch(`${API_BASE_URL}/api/consultations/`, {
+      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -190,7 +190,8 @@ const ConsultationPage = () => {
 
       console.log('Sending consultation data:', consultationData);
 
-      const response = await fetch(`${API_BASE_URL}/api/consultations/`, {
+      // USE THE SAME WORKING ENDPOINT FOR POST
+      const response = await fetch(`${API_BASE_URL}/api/consultations/consultations/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -297,7 +298,7 @@ const ConsultationPage = () => {
           API Base: {API_BASE_URL}
         </Typography>
         <Typography variant="body2">
-          Using Endpoint: /api/consultations/
+          Using Endpoint: /api/consultations/consultations/
         </Typography>
         <Typography variant="body2">
           Loaded: {specialistsToDisplay.length} specialists, {scansToDisplay.length} scans, {consultationsToDisplay.length} consultations
